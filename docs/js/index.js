@@ -8,7 +8,7 @@ AVATAR.mixers = new Array();
 
 var container, stats, controls;
 var camera, scene, renderer, light;
-
+var isReady = false;
 const clock = new THREE.Clock();
 
 
@@ -42,7 +42,7 @@ function initJeeliz(videoElement) {
             }
             // [init scene with spec...]
             console.log('INFO: JEEFACEFILTERAPI IS READY');
-
+            isReady = true;
         }, //end callbackReady()
 
         //called at each render iteration (drawing loop)
@@ -157,9 +157,9 @@ function initThree() {
         //vrm.scene.children[3].skeleton.bones[12].rotation.z = 1;
     });
 
-//    renderer = new THREE.WebGLRenderer({ antialias: true });
+    //    renderer = new THREE.WebGLRenderer({ antialias: true });
     //renderer.setPixelRatio(window.devicePixelRatio);
-    renderer = new THREE.WebGLRenderer({ });
+    renderer = new THREE.WebGLRenderer({});
     renderer.setPixelRatio(1);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -185,13 +185,14 @@ function onWindowResize() {
 
 function animate() {
 
-   requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
     //アニメーションの更新
     let delta = clock.getDelta();
     for (let i = 0, len = AVATAR.mixers.length; i < len; ++i) {
         AVATAR.mixers[i].update(delta);
     }
-    avatarExpression();
+    if (isReady)
+        avatarExpression();
     renderer.render(scene, camera);
     //console.log(JEEFACETRANSFERAPI.get_morphTargetInfluences()[6]);
     stats.update();
@@ -199,17 +200,17 @@ function animate() {
 }
 
 function avatarExpression() {
-    if(AVATAR.morphTarget != undefined){
-         //R eye
+    if (AVATAR.morphTarget != undefined) {
+        //R eye
         AVATAR.morphTarget.morphTargetInfluences[12] = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized()[9];
-         //L eye
+        //L eye
         AVATAR.morphTarget.morphTargetInfluences[13] = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized()[8];
-         //口A
+        //口A
         AVATAR.morphTarget.morphTargetInfluences[28] = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized()[6];
     }
-    
+
     let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
-    AVATAR.head.rotation.x =-faceRotaion[0];
+    AVATAR.head.rotation.x = -faceRotaion[0];
     AVATAR.head.rotation.y = faceRotaion[1];
-    AVATAR.head.rotation.z =-faceRotaion[2];
+    AVATAR.head.rotation.z = -faceRotaion[2];
 }
