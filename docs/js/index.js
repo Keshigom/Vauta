@@ -15,19 +15,19 @@ const clock = new THREE.Clock();
 
 //entry point :
 function main() {
-    const videoElement = document.getElementById('trackVideo');
+   // const videoElement = document.getElementById('trackVideo');
 
-    if (videoElement['currentTime'] && videoElement['videoWidth'] && videoElement['videoHeight']) {
-        initJeeliz(videoElement);
-    } else {
-        setTimeout(main, 100);
-        videoElement['play']();
-    }
-
+    //if (videoElement['currentTime'] && videoElement['videoWidth'] && videoElement['videoHeight']) {
+        //initJeeliz(videoElement);
+    //} else {
+     //   setTimeout(main, 100);
+     //   videoElement['play']();
+    //}
+    initJeeliz();
     animate();
 }
-
-function initJeeliz(videoElement) {
+//function initJeeliz(videoElement) {
+function initJeeliz() {
     //jeeliz init
     JEEFACETRANSFERAPI.init({
         canvasId: 'jeefacetransferCanvas',
