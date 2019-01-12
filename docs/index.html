@@ -48,6 +48,18 @@
 			transform: translate(-50%, -50%);
 		}
 
+		#dropbox{
+   		 	border: 1px solid #aaa;
+   		 	width: 400px;
+    		height: 300px;
+    		top: 0;
+    		bottom: 0;
+    		left: 0;
+    		right: 0;
+    		position: absolute;
+    		margin: auto;
+		}
+
 		#debugWindow {
 			z-index: 200;
 			position: absolute;
@@ -62,7 +74,7 @@
 
 </head>
 
-<body onload="main()">
+<body onload>
 	<div id="info">
 		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - VRMLoader<br />
 		<a href="https://jeeliz.com/" target="_blank" rel="noopener">Jeeliz</a> -detect facial expressions<br />
@@ -76,6 +88,12 @@
 		<div>Face Data</div>
 		<div id="faceData"></div>
 	</div>
+	<div id="dropbox">
+		<input type="file" id="input" onchange="handleFiles(this.files)">
+
+	</div>
+
+
 	<script src="lib/three.min.js"></script>
 	<script src="lib/OrbitControls.js"></script>
 

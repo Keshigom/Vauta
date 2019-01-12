@@ -1,3 +1,42 @@
+// 要素を取得
+var inputFile = document.getElementById("vrmInput");
+
+// 読み込みを実行
+var fileReader;
+var avatarURL;
+
+function handleFiles(filesObj) {
+    //fileReader = filesObj;
+    console.log("handlefile");
+    console.log(filesObj[0]);
+    dropbox.style.display = "none";
+    avatarURL = window.URL.createObjectURL(filesObj[0]);
+    main();
+}
+
+var dropbox;
+dropbox = document.getElementById("dropbox");
+dropbox.addEventListener("dragenter", dragenter, false);
+dropbox.addEventListener("dragover", dragover, false);
+dropbox.addEventListener("drop", drop, false);
+function dragenter(e) {
+    e.stopPropagation();
+    e.preventDefault();
+}
+
+function dragover(e) {
+    e.stopPropagation();
+    e.preventDefault();
+}
+function drop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    var dt = e.dataTransfer;
+    var files = dt.files;
+    handleFiles(files);
+}
+
 if (WEBGL.isWebGLAvailable() === false) {
 
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
@@ -22,6 +61,7 @@ function main() {
     //   videoElement['play']();
     //}
     initJeeliz();
+    initThree();
     animate();
 }
 //function initJeeliz(videoElement) {
@@ -44,7 +84,7 @@ function initJeeliz() {
         }, //end callbackReady()
 
         //called at each render iteration (drawing loop)
-        
+
         callbackTrack: function (detectState) {
             console.log("callback");
             console.log(detectState);
@@ -53,7 +93,6 @@ function initJeeliz() {
 
 }
 
-initThree();
 function initThree() {
 
     //animation
@@ -86,7 +125,7 @@ function initThree() {
     // model
     var loader = new THREE.VRMLoader();
     //			loader.load('models/vrm/Alicia/AliciaSolid.vrm', function (vrm) {
-    loader.load('assets/model/Mono.vrm', function (vrm) {
+    loader.load(avatarURL, function (vrm) {
 
         vrm.scene.name = "VRM";
 

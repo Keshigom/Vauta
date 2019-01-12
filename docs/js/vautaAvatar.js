@@ -7,15 +7,23 @@ var AVATAR = AVATAR || {};
 
     let flag = true;
     AVATAR.UpdateExpression = function () {
-        if (Number.isNaN(JEEFACETRANSFERAPI.get_rotation()[0])) {
-            if(flag){
-                alert("トラッキングエラー<br>ページを更新してください");
+
+        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
+        if (Number.isNaN(faceRotaion[0])) {
+            if (flag) {
+                console.log("トラッキングエラー:NaN");
                 flag = false;
             }
-            //JEEFACEFILTERAPI.toggle_pause(true);
+            JEEFACETRANSFERAPI.initialized = false;
+            initJeeliz();
+            //JEEFACEFILTERAPI.toggle_pause(true); 
             //JEEFACEFILTERAPI.toggle_pause(false);
             return;
         }
+
+        AVATAR.head.rotation.x = -faceRotaion[0];
+        AVATAR.head.rotation.y = faceRotaion[1];
+        AVATAR.head.rotation.z = -faceRotaion[2];
 
 
         if (AVATAR.morphTarget != undefined) {
@@ -45,10 +53,6 @@ var AVATAR = AVATAR || {};
 
         }
 
-        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
-        AVATAR.head.rotation.x = -faceRotaion[0];
-        AVATAR.head.rotation.y = faceRotaion[1];
-        AVATAR.head.rotation.z = -faceRotaion[2];
     };
 
     AVATAR.debugMessage = function () {
