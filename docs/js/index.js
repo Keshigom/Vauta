@@ -3,8 +3,6 @@ if (WEBGL.isWebGLAvailable() === false) {
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
 
 }
-var AVATAR = {};
-AVATAR.mixers = new Array();
 
 var container, stats, controls;
 var camera, scene, renderer, light;
@@ -151,7 +149,6 @@ function initThree() {
             }
         });
         AVATAR.mixers.push(mixer);
-        console.log(vrm.scene.children[3].skeleton.bones);
         AVATAR.neck = vrm.scene.children[3].skeleton.bones[12];
         AVATAR.head = vrm.scene.children[3].skeleton.bones[13];
         //vrm.scene.children[3].skeleton.bones[12].rotation.z = 1;
@@ -191,26 +188,14 @@ function animate() {
     for (let i = 0, len = AVATAR.mixers.length; i < len; ++i) {
         AVATAR.mixers[i].update(delta);
     }
-    if (isReady)
-        avatarExpression();
+    if (isReady){
+        AVATAR.UpdateExpression();
+        let debugFaceData = document.getElementById("faceData");
+        debugFaceData.innerHTML = AVATAR.debugMessage();
+    }
     renderer.render(scene, camera);
     //console.log(JEEFACETRANSFERAPI.get_morphTargetInfluences()[6]);
     stats.update();
 
 }
 
-function avatarExpression() {
-    if (AVATAR.morphTarget != undefined) {
-        //R eye
-        AVATAR.morphTarget.morphTargetInfluences[12] = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized()[9];
-        //L eye
-        AVATAR.morphTarget.morphTargetInfluences[13] = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized()[8];
-        //口A
-        AVATAR.morphTarget.morphTargetInfluences[28] = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized()[6];
-    }
-
-    let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
-    AVATAR.head.rotation.x = -faceRotaion[0];
-    AVATAR.head.rotation.y = faceRotaion[1];
-    AVATAR.head.rotation.z = -faceRotaion[2];
-}
