@@ -13,13 +13,13 @@ const clock = new THREE.Clock();
 
 //entry point :
 function main() {
-   // const videoElement = document.getElementById('trackVideo');
+    // const videoElement = document.getElementById('trackVideo');
 
     //if (videoElement['currentTime'] && videoElement['videoWidth'] && videoElement['videoHeight']) {
-        //initJeeliz(videoElement);
+    //initJeeliz(videoElement);
     //} else {
-     //   setTimeout(main, 100);
-     //   videoElement['play']();
+    //   setTimeout(main, 100);
+    //   videoElement['play']();
     //}
     initJeeliz();
     animate();
@@ -44,10 +44,11 @@ function initJeeliz() {
         }, //end callbackReady()
 
         //called at each render iteration (drawing loop)
-        // callbackTrack: function(detectState){
-        //     //render your scene here
-        //     [... do something with detectState]
-        // } //end callbackTrack()
+        
+        callbackTrack: function (detectState) {
+            console.log("callback");
+            console.log(detectState);
+        } //end callbackTrack()
     });//end init call
 
 }
@@ -188,7 +189,7 @@ function animate() {
     for (let i = 0, len = AVATAR.mixers.length; i < len; ++i) {
         AVATAR.mixers[i].update(delta);
     }
-    if (isReady){
+    if (isReady) {
         AVATAR.UpdateExpression();
         let debugFaceData = document.getElementById("faceData");
         debugFaceData.innerHTML = AVATAR.debugMessage();

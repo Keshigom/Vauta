@@ -5,22 +5,28 @@ var AVATAR = AVATAR || {};
     AVATAR.head;
     AVATAR.morphTarget;
 
+    let flag = true;
     AVATAR.UpdateExpression = function () {
-        if(Number.isNaN(JEEFACETRANSFERAPI.get_rotation()[0])){
-            console.log("トラッキングエラー");
+        if (Number.isNaN(JEEFACETRANSFERAPI.get_rotation()[0])) {
+            if(flag){
+                alert("トラッキングエラー<br>ページを更新してください");
+                flag = false;
+            }
+            //JEEFACEFILTERAPI.toggle_pause(true);
+            //JEEFACEFILTERAPI.toggle_pause(false);
             return;
         }
 
 
         if (AVATAR.morphTarget != undefined) {
             let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-            
+
 
             //眉　↑
-            AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4]+faceExpression[5])*0.5;
+            AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
 
             //眉　↓
-            AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2]+faceExpression[3])*0.5;
+            AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
 
             //R eye
             AVATAR.morphTarget.morphTargetInfluences[12] = faceExpression[9];
@@ -33,9 +39,9 @@ var AVATAR = AVATAR || {};
             //くちA
             AVATAR.morphTarget.morphTargetInfluences[28] = faceExpression[6];
             //くちO
-            AVATAR.morphTarget.morphTargetInfluences[32] = (faceExpression[6] + faceExpression[6] * faceExpression[7])*0.5;
+            AVATAR.morphTarget.morphTargetInfluences[32] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
             //くちu
-            AVATAR.morphTarget.morphTargetInfluences[30] = faceExpression[7]*0.7;
+            AVATAR.morphTarget.morphTargetInfluences[30] = faceExpression[7] * 0.7;
 
         }
 
