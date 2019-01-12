@@ -5,17 +5,18 @@ var AVATAR = AVATAR || {};
     AVATAR.head;
     AVATAR.morphTarget;
 
-    let flag = true;
+    AVATAR.errorFlag = false;
     AVATAR.UpdateExpression = function () {
 
         let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
         if (Number.isNaN(faceRotaion[0])) {
-            if (flag) {
+            if (!AVATAR.errorFlag) {
                 console.log("トラッキングエラー:NaN");
-                flag = false;
+                AVATAR.errorFlag = true;
+                JEEFACETRANSFERAPI.initialized = false;
+                initJeeliz();
             }
-            JEEFACETRANSFERAPI.initialized = false;
-            initJeeliz();
+
             //JEEFACEFILTERAPI.toggle_pause(true); 
             //JEEFACEFILTERAPI.toggle_pause(false);
             return;
@@ -28,7 +29,19 @@ var AVATAR = AVATAR || {};
 
         if (AVATAR.morphTarget != undefined) {
             let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-
+            if (Number.isNaN(faceExpression[0])) {
+                if (!AVATAR.errorFlag) {
+                    console.log("トラッキングエラー:NaN");
+                    AVATAR.errorFlag = true;
+                    JEEFACETRANSFERAPI.initialized = false;
+                    initJeeliz();
+                }
+    
+                //JEEFACEFILTERAPI.toggle_pause(true); 
+                //JEEFACEFILTERAPI.toggle_pause(false);
+                return;
+            }
+    
 
             //眉　↑
             AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;

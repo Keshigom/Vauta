@@ -81,6 +81,7 @@ function initJeeliz() {
             // [init scene with spec...]
             console.log('INFO: JEEFACEFILTERAPI IS READY');
             isReady = true;
+            AVATAR.errorFlag = false;
         }, //end callbackReady()
 
         //called at each render iteration (drawing loop)
