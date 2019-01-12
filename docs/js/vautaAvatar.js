@@ -6,7 +6,7 @@ var AVATAR = AVATAR || {};
     AVATAR.morphTarget;
 
     AVATAR.UpdateExpression = function () {
-        if(JEEFACETRANSFERAPI.get_rotation()[0] == NaN){
+        if(Number.isNaN(JEEFACETRANSFERAPI.get_rotation()[0])){
             console.log("トラッキングエラー");
             return;
         }
@@ -33,7 +33,7 @@ var AVATAR = AVATAR || {};
             //くちA
             AVATAR.morphTarget.morphTargetInfluences[28] = faceExpression[6];
             //くちO
-            AVATAR.morphTarget.morphTargetInfluences[32] = faceExpression[6]/2 + faceExpression[6] * faceExpression[7];
+            AVATAR.morphTarget.morphTargetInfluences[32] = (faceExpression[6] + faceExpression[6] * faceExpression[7])*0.5;
             //くちu
             AVATAR.morphTarget.morphTargetInfluences[30] = faceExpression[7]*0.7;
 
