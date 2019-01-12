@@ -38,7 +38,7 @@
 		}
 
 		.webojiCanvas {
-			z-index: 10;
+			z-index: 0;
 			position: absolute;
 			max-height: 100%;
 			max-width: 100%;
@@ -46,6 +46,14 @@
 			top: 50%;
 			width: 100vmin;
 			transform: translate(-50%, -50%);
+		}
+
+		#debugWindow {
+			z-index: 200;
+			position: absolute;
+			top: 0px;
+			right: 0px;
+			/* max-height: 25vh; */
 		}
 	</style>
 	<script src="lib/jeeliz/jeelizFaceTransfer.js"></script>
@@ -62,7 +70,11 @@
 	</div>
 	<canvas class='jeefacetransferCanvas' id='jeefacetransferCanvas'></canvas>
 	<canvas class='webojiCanvas' id='webojiCanvas' width='0' height='0'></canvas>
-
+	<div id="debugWindow">
+		<div>Debug Message Window</div>
+		<div>Face Data</div>
+		<div id="faceData"></div>
+	</div>
 	<script src="lib/three.min.js"></script>
 	<script src="lib/OrbitControls.js"></script>
 
