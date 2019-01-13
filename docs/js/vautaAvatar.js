@@ -113,9 +113,7 @@ var AVATAR = AVATAR || {};
         var loader = new THREE.VRMLoader();
         loader.load(avatarURL, function (vrm) {
 
-            console.log("Bone index");
-            console.log(vrm.parser.json.extensions.VRM.humanoid.humanBones);
-
+          
             console.log("ブレンドシェイプグループ index");
             console.log(vrm.parser.json.extensions.VRM.blendShapeMaster.blendShapeGroups);
             console.log(vrm);
@@ -178,7 +176,7 @@ var AVATAR = AVATAR || {};
             //表情のブレンドシェイプ
             AVATAR.morphTarget = vrm.scene.getObjectByName("Face", true) || vrm.scene.getObjectByName("face", true);
             threeScene.add(vrm.scene);
-
+            //AVATAR.VRM = vrm;
             //アニメーションの紐付け
             //[CHECK]
             //一時無効化
