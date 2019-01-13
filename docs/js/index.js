@@ -1,3 +1,10 @@
+
+if (WEBGL.isWebGLAvailable() === false) {
+
+    document.body.appendChild(WEBGL.getWebGLErrorMessage());
+
+}
+
 // 要素を取得
 var inputFile = document.getElementById("vrmInput");
 
@@ -37,11 +44,6 @@ function drop(e) {
     handleFiles(files);
 }
 
-if (WEBGL.isWebGLAvailable() === false) {
-
-    document.body.appendChild(WEBGL.getWebGLErrorMessage());
-
-}
 
 var container, stats, controls;
 var camera, scene, renderer, light;
@@ -52,18 +54,12 @@ const clock = new THREE.Clock();
 
 //entry point :
 function main() {
-    // const videoElement = document.getElementById('trackVideo');
 
-    //if (videoElement['currentTime'] && videoElement['videoWidth'] && videoElement['videoHeight']) {
-    //initJeeliz(videoElement);
-    //} else {
-    //   setTimeout(main, 100);
-    //   videoElement['play']();
-    //}
     initJeeliz();
     initThree();
     animate();
 }
+
 //function initJeeliz(videoElement) {
 function initJeeliz() {
     //jeeliz init
@@ -96,17 +92,6 @@ function initJeeliz() {
 
 function initThree() {
 
-    //animation
-    const animationFiles = ['assets/motion/Idle.gltf'];
-    const animationLoader = new THREE.GLTFLoader();
-    for (let i = 0; i < animationFiles.length; ++i) {
-        animationLoader.load(animationFiles[i], function () { });
-    }
-
-
-    let loadModelIndex = 0;
-    let loadAnimationIndex = 0;
-
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -123,83 +108,13 @@ function initThree() {
     light.position.set(0, 1, 0);
     scene.add(light);
 
-    // model
-    var loader = new THREE.VRMLoader();
-    //			loader.load('models/vrm/Alicia/AliciaSolid.vrm', function (vrm) {
-    loader.load(avatarURL, function (vrm) {
+    AVATAR.loadVRM(scene);
 
-        vrm.scene.name = "VRM";
-
-        // VRMLoader doesn't support VRM Unlit extension yet so
-        // converting all materials to MeshBasicMaterial here as workaround so far.
-        vrm.scene.traverse(function (object) {
-
-            if (object.material) {
-
-                if (Array.isArray(object.material)) {
-
-                    for (var i = 0, il = object.material.length; i < il; i++) {
-
-                        var material = new THREE.MeshBasicMaterial();
-                        THREE.Material.prototype.copy.call(material, object.material[i]);
-                        material.color.copy(object.material[i].color);
-                        material.map = object.material[i].map;
-                        material.lights = false;
-                        material.skinning = object.material[i].skinning;
-                        material.morphTargets = object.material[i].morphTargets;
-                        material.morphNormals = object.material[i].morphNormals;
-                        object.material[i] = material;
-
-                    }
-
-                } else {
-
-                    var material = new THREE.MeshBasicMaterial();
-                    THREE.Material.prototype.copy.call(material, object.material);
-                    material.color.copy(object.material.color);
-                    material.map = object.material.map;
-                    material.lights = false;
-                    material.skinning = object.material.skinning;
-                    material.morphTargets = object.material.morphTargets;
-                    material.morphNormals = object.material.morphNormals;
-                    object.material = material;
-
-                }
-
-            }
-
-        });
-
-        //Vroid Only
-        //表情のブレンドシェイプ
-        AVATAR.morphTarget = vrm.scene.getObjectByName("Face", true);
-
-
-        scene.add(vrm.scene);
-
-        //アニメーションの紐付け
-        let mixer = new THREE.AnimationMixer(vrm.scene);
-        animationLoader.load(animationFiles[loadAnimationIndex], function (gltf) {
-            const animations = gltf.animations;
-            if (animations && animations.length) {
-                for (let animation of animations) {
-                    correctBoneName(animation.tracks);
-                    correctCoordinate(animation.tracks);
-                    mixer.clipAction(animation).play();
-                }
-            }
-        });
-        AVATAR.mixers.push(mixer);
-        AVATAR.neck = vrm.scene.children[3].skeleton.bones[12];
-        AVATAR.head = vrm.scene.children[3].skeleton.bones[13];
-        //vrm.scene.children[3].skeleton.bones[12].rotation.z = 1;
-    });
-
-    //    renderer = new THREE.WebGLRenderer({ antialias: true });
+    // レンダラー設定
+    //renderer = new THREE.WebGLRenderer({ antialias: true });
     //renderer.setPixelRatio(window.devicePixelRatio);
     renderer = new THREE.WebGLRenderer({});
     renderer.setPixelRatio(1);
-
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.gammaOutput = true;
     container.appendChild(renderer.domElement);
@@ -224,11 +139,15 @@ function onWindowResize() {
 function animate() {
 
     requestAnimationFrame(animate);
+    //[CHECK]
+    //ボーンアニメーション機能
+    //一時無効化
     //アニメーションの更新
-    let delta = clock.getDelta();
-    for (let i = 0, len = AVATAR.mixers.length; i < len; ++i) {
-        AVATAR.mixers[i].update(delta);
-    }
+    // let delta = clock.getDelta();
+    // for (let i = 0, len = AVATAR.mixers.length; i < len; ++i) {
+    //     AVATAR.mixers[i].update(delta);
+    // }
+
     if (isReady) {
         AVATAR.UpdateExpression();
         let debugFaceData = document.getElementById("faceData");

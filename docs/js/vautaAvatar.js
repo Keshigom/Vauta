@@ -1,3 +1,12 @@
+/*
+依存先
+JEEFACETRANSFERAPI（jeelizFaceTransfer.js）
+Three.js
+GLTFLoder.js
+VRMLoder.js
+WebGL.js
+*/
+
 var AVATAR = AVATAR || {};
 (function (global) {
     AVATAR.mixers = new Array();
@@ -5,29 +14,31 @@ var AVATAR = AVATAR || {};
     AVATAR.head;
     AVATAR.morphTarget;
 
+
     AVATAR.errorFlag = false;
     AVATAR.UpdateExpression = function () {
 
-        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
-        if (Number.isNaN(faceRotaion[0])) {
-            if (!AVATAR.errorFlag) {
-                console.log("トラッキングエラー:NaN");
-                AVATAR.errorFlag = true;
-                JEEFACETRANSFERAPI.initialized = false;
-                initJeeliz();
-            }
 
-            //JEEFACEFILTERAPI.toggle_pause(true); 
-            //JEEFACEFILTERAPI.toggle_pause(false);
-            return;
+        if (AVATAR.head != undefined) {
+            let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
+            if (Number.isNaN(faceRotaion[0])) {
+                if (!AVATAR.errorFlag) {
+                    console.log("トラッキングエラー:NaN");
+                    AVATAR.errorFlag = true;
+                    JEEFACETRANSFERAPI.initialized = false;
+                    initJeeliz();
+                }
+
+                //JEEFACEFILTERAPI.toggle_pause(true); 
+                //JEEFACEFILTERAPI.toggle_pause(false);
+                return;
+            }
+            AVATAR.head.rotation.x = -faceRotaion[0];
+            AVATAR.head.rotation.y = faceRotaion[1];
+            AVATAR.head.rotation.z = -faceRotaion[2];
         }
 
-        AVATAR.head.rotation.x = -faceRotaion[0];
-        AVATAR.head.rotation.y = faceRotaion[1];
-        AVATAR.head.rotation.z = -faceRotaion[2];
-
-
-        if (AVATAR.morphTarget != undefined) {
+        if (AVATAR.morphTarget != undefined && AVATAR.morphTarget.morphTargetInfluences != undefined) {
             let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
             if (Number.isNaN(faceExpression[0])) {
                 if (!AVATAR.errorFlag) {
@@ -36,12 +47,12 @@ var AVATAR = AVATAR || {};
                     JEEFACETRANSFERAPI.initialized = false;
                     initJeeliz();
                 }
-    
+
                 //JEEFACEFILTERAPI.toggle_pause(true); 
                 //JEEFACEFILTERAPI.toggle_pause(false);
                 return;
             }
-    
+
 
             //眉　↑
             AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
@@ -86,6 +97,132 @@ var AVATAR = AVATAR || {};
 
         return message;
     };
+
+    //animation
+    //[CHECK]
+    // const animationFiles = ['assets/motion/Idle.gltf'];
+    // const animationLoader = new THREE.GLTFLoader();
+    // for (let i = 0; i < animationFiles.length; ++i) {
+    //     animationLoader.load(animationFiles[i], function () { });
+    // }
+
+    let loadModelIndex = 0;
+    let loadAnimationIndex = 0;
+    AVATAR.loadVRM = function (threeScene) {
+        // model
+        var loader = new THREE.VRMLoader();
+        loader.load(avatarURL, function (vrm) {
+
+            console.log("Bone index");
+            console.log(vrm.parser.json.extensions.VRM.humanoid.humanBones);
+
+            console.log("ブレンドシェイプグループ index");
+            console.log(vrm.parser.json.extensions.VRM.blendShapeMaster.blendShapeGroups);
+            console.log(vrm);
+
+            vrm.scene.name = "VRM";
+
+            // VRMLoader doesn't support VRM Unlit extension yet so
+            // converting all materials to MeshBasicMaterial here as workaround so far.
+            vrm.scene.traverse(function (object) {
+
+                if (object.material) {
+
+                    if (Array.isArray(object.material)) {
+
+                        for (var i = 0, il = object.material.length; i < il; i++) {
+
+                            var material = new THREE.MeshBasicMaterial();
+                            THREE.Material.prototype.copy.call(material, object.material[i]);
+                            material.color.copy(object.material[i].color);
+                            material.map = object.material[i].map;
+                            material.lights = false;
+                            material.skinning = object.material[i].skinning;
+                            material.morphTargets = object.material[i].morphTargets;
+                            material.morphNormals = object.material[i].morphNormals;
+                            object.material[i] = material;
+
+                        }
+
+                    } else {
+
+                        var material = new THREE.MeshBasicMaterial();
+                        THREE.Material.prototype.copy.call(material, object.material);
+                        material.color.copy(object.material.color);
+                        material.map = object.material.map;
+                        material.lights = false;
+                        material.skinning = object.material.skinning;
+                        material.morphTargets = object.material.morphTargets;
+                        material.morphNormals = object.material.morphNormals;
+                        object.material = material;
+
+                    }
+
+                }
+
+            });
+
+            //ボーンの設定
+            let boneMaps = AVATAR.boneMapping(vrm.parser.json);
+            console.log(boneMaps);
+            AVATAR.neck = vrm.scene.children[3].skeleton.bones[12];
+            AVATAR.head = vrm.scene.children[3].skeleton.bones[13];
+            AVATAR.head = vrm.scene.getObjectByName(boneMaps["head"], true);
+            let leftUpperArm = vrm.scene.getObjectByName(boneMaps["leftUpperArm"], true);
+            let rightUpperArm = vrm.scene.getObjectByName(boneMaps["rightUpperArm"], true);
+            leftUpperArm.rotation.z =Math.PI*(70/180);
+            rightUpperArm.rotation.z =Math.PI*(-70/180);
+
+
+            //Vroid Only
+            //表情のブレンドシェイプ
+            AVATAR.morphTarget = vrm.scene.getObjectByName("Face", true) || vrm.scene.getObjectByName("face", true);
+            threeScene.add(vrm.scene);
+
+            //アニメーションの紐付け
+            //[CHECK]
+            //一時無効化
+            // let mixer = new THREE.AnimationMixer(vrm.scene);
+            // animationLoader.load(animationFiles[loadAnimationIndex], function (gltf) {
+            //     const animations = gltf.animations;
+            //     if (animations && animations.length) {
+            //         for (let animation of animations) {
+            //             correctBoneName(animation.tracks);
+            //             correctCoordinate(animation.tracks);
+            //             mixer.clipAction(animation).play();
+            //         }
+            //     }
+            // });
+            //AVATAR.mixers.push(mixer);
+         
+
+        });
+
+    }
+
+    //標準ボーンとモデル固有のボーン名の対応の連想配列を求める
+    //{standardBoneName: "modelsBoneName"}
+    //例）
+    //{head            : "head"         ,hips: "waist",jaw: "mouth"...}
+    AVATAR.boneMapping = function (json) {
+        //VRM規格の標準ボーン
+        const standardBone = ["hips", "leftUpperLeg", "rightUpperLeg", "leftLowerLeg", "rightLowerLeg", "leftFoot", "rightFoot", "spine", "chest", "neck", "head", "leftShoulder", "rightShoulder", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand", "leftToes", "rightToes", "leftEye", "rightEye", "jaw", "leftThumbProximal", "leftThumbIntermediate", "leftThumbDistal", "leftIndexProximal", "leftIndexIntermediate", "leftIndexDistal", "leftMiddleProximal", "leftMiddleIntermediate", "leftMiddleDistal", "leftRingProximal", "leftRingIntermediate", "leftRingDistal", "leftLittleProximal", "leftLittleIntermediate", "leftLittleDistal", "rightThumbProximal", "rightThumbIntermediate", "rightThumbDistal", "rightIndexProximal", "rightIndexIntermediate", "rightIndexDistal", "rightMiddleProximal", "rightMiddleIntermediate", "rightMiddleDistal", "rightRingProximal", "rightRingIntermediate", "rightRingDistal", "rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal", "upperChest"];
+        
+        let boneMap = {};
+        const humanoid = new Object();
+        humanoid.humanBones = json.extensions.VRM.humanoid.humanBones;
+        standardBone.forEach(key => {
+            const target = json.extensions.VRM.humanoid.humanBones.find(
+                humanBone => humanBone.bone === key
+            );
+            if (target != undefined) {
+                boneMap[key] =json.nodes[target.node].name;
+            }
+
+        });
+        return boneMap;
+    }
+
 }(this));
 
 /*
