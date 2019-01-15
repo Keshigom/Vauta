@@ -1,0 +1,61 @@
+body {
+    font-family: Monospace;
+    background-color: #000;
+    color: #fff;
+    margin: 0px;
+    overflow: hidden;
+}
+
+#info {
+    color: #fff;
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    text-align: center;
+    z-index: 100;
+    display: block;
+}
+
+#info a {
+    color: #75ddc1;
+    font-weight: bold;
+}
+
+.jeefacetransferCanvas {
+    z-index: 200;
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    max-height: 25vh;
+}
+
+.webojiCanvas {
+    z-index: 0;
+    position: absolute;
+    max-height: 100%;
+    max-width: 100%;
+    left: 50%;
+    top: 50%;
+    width: 100vmin;
+    transform: translate(-50%, -50%);
+}
+
+#dropbox{
+        border: 1px solid #aaa;
+        width: 400px;
+    height: 300px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    margin: auto;
+}
+
+#debugWindow {
+    z-index: 200;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    /* max-height: 25vh; */
+}
