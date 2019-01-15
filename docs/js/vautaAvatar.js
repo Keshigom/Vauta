@@ -54,26 +54,31 @@ var AVATAR = AVATAR || {};
             }
 
 
+            //R eye,"blink_l","blink_r",
+            AVATAR.morphTarget.morphTargetInfluences[expressionMap["blink_r"]] = faceExpression[9];
+            //L eye
+            AVATAR.morphTarget.morphTargetInfluences[expressionMap["blink_l"]] = faceExpression[8];
+
+            //くちA
+            AVATAR.morphTarget.morphTargetInfluences[expressionMap["a"]] = faceExpression[6];
+            //くちO
+            AVATAR.morphTarget.morphTargetInfluences[expressionMap["o"]] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+            //くちu
+            AVATAR.morphTarget.morphTargetInfluences[expressionMap["u"]] = faceExpression[7] * 0.7;
+
+
+            
+            //Vroidのみ正常に動作
             //眉　↑
             AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
 
             //眉　↓
             AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
 
-            //R eye
-            AVATAR.morphTarget.morphTargetInfluences[12] = faceExpression[9];
-            //L eye
-            AVATAR.morphTarget.morphTargetInfluences[13] = faceExpression[8];
-
             //くち 笑顔
-            AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] + faceExpression[1];
-            AVATAR.morphTarget.morphTargetInfluences[24] /= 2;
-            //くちA
-            AVATAR.morphTarget.morphTargetInfluences[28] = faceExpression[6];
-            //くちO
-            AVATAR.morphTarget.morphTargetInfluences[32] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
-            //くちu
-            AVATAR.morphTarget.morphTargetInfluences[30] = faceExpression[7] * 0.7;
+            AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] * 0.5 + faceExpression[1] * 0.5;
+
+
 
         }
 
@@ -113,7 +118,7 @@ var AVATAR = AVATAR || {};
         var loader = new THREE.VRMLoader();
         loader.load(avatarURL, function (vrm) {
 
-          
+
             console.log("ブレンドシェイプグループ index");
             console.log(vrm.parser.json.extensions.VRM.blendShapeMaster.blendShapeGroups);
             console.log(vrm);
@@ -168,15 +173,20 @@ var AVATAR = AVATAR || {};
             AVATAR.head = vrm.scene.getObjectByName(boneMaps["head"], true);
             let leftUpperArm = vrm.scene.getObjectByName(boneMaps["leftUpperArm"], true);
             let rightUpperArm = vrm.scene.getObjectByName(boneMaps["rightUpperArm"], true);
-            leftUpperArm.rotation.z =Math.PI*(70/180);
-            rightUpperArm.rotation.z =Math.PI*(-70/180);
+            leftUpperArm.rotation.z = Math.PI * (70 / 180);
+            rightUpperArm.rotation.z = Math.PI * (-70 / 180);
 
 
             //Vroid Only
             //表情のブレンドシェイプ
-            AVATAR.morphTarget = vrm.scene.getObjectByName("Face", true) || vrm.scene.getObjectByName("face", true);
+            //AVATAR.morphTarget = vrm.scene.getObjectByName("Face", true) || vrm.scene.getObjectByName("face", true);
+            //console.log(searchFaceMorph(vrm.scene));
+            AVATAR.morphTarget = searchFaceMorph(vrm.scene);
+            expressionMapping(vrm.parser.json);
             threeScene.add(vrm.scene);
-            //AVATAR.VRM = vrm;
+            AVATAR.VRM = vrm;
+
+
             //アニメーションの紐付け
             //[CHECK]
             //一時無効化
@@ -192,7 +202,7 @@ var AVATAR = AVATAR || {};
             //     }
             // });
             //AVATAR.mixers.push(mixer);
-         
+
 
         });
 
@@ -205,20 +215,64 @@ var AVATAR = AVATAR || {};
     AVATAR.boneMapping = function (json) {
         //VRM規格の標準ボーン
         const standardBone = ["hips", "leftUpperLeg", "rightUpperLeg", "leftLowerLeg", "rightLowerLeg", "leftFoot", "rightFoot", "spine", "chest", "neck", "head", "leftShoulder", "rightShoulder", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand", "leftToes", "rightToes", "leftEye", "rightEye", "jaw", "leftThumbProximal", "leftThumbIntermediate", "leftThumbDistal", "leftIndexProximal", "leftIndexIntermediate", "leftIndexDistal", "leftMiddleProximal", "leftMiddleIntermediate", "leftMiddleDistal", "leftRingProximal", "leftRingIntermediate", "leftRingDistal", "leftLittleProximal", "leftLittleIntermediate", "leftLittleDistal", "rightThumbProximal", "rightThumbIntermediate", "rightThumbDistal", "rightIndexProximal", "rightIndexIntermediate", "rightIndexDistal", "rightMiddleProximal", "rightMiddleIntermediate", "rightMiddleDistal", "rightRingProximal", "rightRingIntermediate", "rightRingDistal", "rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal", "upperChest"];
-        
+
         let boneMap = {};
         const humanoid = new Object();
         humanoid.humanBones = json.extensions.VRM.humanoid.humanBones;
         standardBone.forEach(key => {
-            const target = json.extensions.VRM.humanoid.humanBones.find(
+            const target = humanoid.humanBones.find(
                 humanBone => humanBone.bone === key
             );
             if (target != undefined) {
-                boneMap[key] =json.nodes[target.node].name;
+                boneMap[key] = json.nodes[target.node].name;
             }
 
         });
         return boneMap;
+    }
+
+
+    //標準ブレンドシェイプへの連想配列を求める
+    //{standardBoneName: "modelsBoneName"}
+    //例）
+    //{head            : "head"         ,hips: "waist",jaw: "mouth"...}
+    let expressionMap;
+    let expressionMapping = function (json) {
+        //VRM規格の標準の表情
+        const standardExpression = ["neutral", "a", "i", "u", "e", "o", "blink", "joy", "angry", "sorrow", "fun", "lookUp", "lookdown", "lookleft", "lookright", "blink_l", "blink_r", "unknown"]
+        let expression = {};
+        const humanoid = new Object();
+        humanoid.blendShapeGroups = json.extensions.VRM.blendShapeMaster.blendShapeGroups;
+        standardExpression.forEach(key => {
+            const target = humanoid.blendShapeGroups.find(
+                blendShapeGroups => blendShapeGroups.presetName === key
+            );
+            if (target && (target.binds.length > 0)) {
+                expression[key] = target.binds[0].index;
+            }
+
+        });
+        expressionMap = expression;
+        console.log(expressionMap);
+    }
+
+
+    //  表情モーフターゲットの特定
+    // 一時的な実装
+    let searchFaceMorph = function (scene) {
+        let faceObj = scene.getObjectByName("Face", true)
+            || scene.getObjectByName("face", true)
+            || scene.getObjectByName("FACE", true);
+
+        if (faceObj.morphTargetInfluences) {
+            return faceObj;
+        }
+        else {
+            return faceObj.children.find(function (element) {
+                let check = element.morphTargetInfluences;
+                return check;
+            });
+        }
     }
 
 }(this));
