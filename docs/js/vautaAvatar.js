@@ -12,6 +12,9 @@ var AVATAR = AVATAR || {};
     AVATAR.mixers = new Array();
     AVATAR.neck;
     AVATAR.head;
+    AVATAR.eyeR;
+    AVATAR.eyeL;
+
     AVATAR.morphTarget;
 
     AVATAR.rawExpressions;
@@ -200,6 +203,7 @@ var AVATAR = AVATAR || {};
 
             //ボーンの設定
             boneDictionary = createBoneDictionary(vrm.parser.json);
+            console.log(boneDictionary);
             AVATAR.head = vrm.scene.getObjectByName(boneDictionary["head"], true);
 
             //Tポーズから腕を下ろさせる
