@@ -14,6 +14,42 @@ var AVATAR = AVATAR || {};
     AVATAR.head;
     AVATAR.morphTarget;
 
+    AVATAR.rawExpressions;
+    AVATAR.filteredExpressions;
+
+    AVATAR.init = function (avatarFileURL, threeScene) {
+        initJeeliz();
+        loadVRM(avatarFileURL, threeScene);
+    };
+
+    //jeelizFaceTransfer.js及び*NNC.jsonが必要です
+    let initJeeliz = function () {
+        JEEFACETRANSFERAPI.init({
+            canvasId: 'jeefacetransferCanvas',
+            NNCpath: '../lib/jeeliz/', //path to JSON neural network model (NNC.json by default)
+            // videoSettings: {
+            //     videoElement: videoElement
+            // },
+            callbackReady: function (errCode, spec) {
+                if (errCode) {
+                    console.log('AN ERROR HAPPENS. ERROR CODE =', errCode);
+                    return;
+                }
+                // [init scene with spec...]
+                console.log('INFO: JEEFACEFILTERAPI IS READY');
+                isReady = true;//グローバル
+                AVATAR.errorFlag = false;
+            }, //end callbackReady()
+
+            //called at each render iteration (drawing loop)
+
+            callbackTrack: function (detectState) {
+                console.log("callback");
+                console.log(detectState);
+            } //end callbackTrack()
+        });//end init call
+
+    }
 
     AVATAR.errorFlag = false;
     AVATAR.UpdateExpression = function () {
@@ -55,19 +91,19 @@ var AVATAR = AVATAR || {};
 
 
             //R eye,"blink_l","blink_r",
-            AVATAR.morphTarget.morphTargetInfluences[expressionMap["blink_r"]] = faceExpression[9];
+            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["blink_r"]] = faceExpression[9];
             //L eye
-            AVATAR.morphTarget.morphTargetInfluences[expressionMap["blink_l"]] = faceExpression[8];
+            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["blink_l"]] = faceExpression[8];
 
             //くちA
-            AVATAR.morphTarget.morphTargetInfluences[expressionMap["a"]] = faceExpression[6];
+            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["a"]] = faceExpression[6];
             //くちO
-            AVATAR.morphTarget.morphTargetInfluences[expressionMap["o"]] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["o"]] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
             //くちu
-            AVATAR.morphTarget.morphTargetInfluences[expressionMap["u"]] = faceExpression[7] * 0.7;
+            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["u"]] = faceExpression[7] * 0.7;
 
 
-            
+
             //Vroidのみ正常に動作
             //眉　↑
             AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
@@ -83,6 +119,7 @@ var AVATAR = AVATAR || {};
         }
 
     };
+
 
     AVATAR.debugMessage = function () {
         let message;
@@ -110,23 +147,18 @@ var AVATAR = AVATAR || {};
     // for (let i = 0; i < animationFiles.length; ++i) {
     //     animationLoader.load(animationFiles[i], function () { });
     // }
+    //let loadModelIndex = 0;
+    //let loadAnimationIndex = 0;
 
-    let loadModelIndex = 0;
-    let loadAnimationIndex = 0;
-    AVATAR.loadVRM = function (threeScene) {
+    let loadVRM = function (avatarFileURL, threeScene) {
         // model
         var loader = new THREE.VRMLoader();
-        loader.load(avatarURL, function (vrm) {
-
-
-            console.log("ブレンドシェイプグループ index");
-            console.log(vrm.parser.json.extensions.VRM.blendShapeMaster.blendShapeGroups);
-            console.log(vrm);
-
+        loader.load(avatarFileURL, function (vrm) {
             vrm.scene.name = "VRM";
 
             // VRMLoader doesn't support VRM Unlit extension yet so
             // converting all materials to MeshBasicMaterial here as workaround so far.
+            //マテリアルの変換（Unlit -> MeshBasicMaterial ）
             vrm.scene.traverse(function (object) {
 
                 if (object.material) {
@@ -166,26 +198,26 @@ var AVATAR = AVATAR || {};
             });
 
             //ボーンの設定
-            let boneMaps = AVATAR.boneMapping(vrm.parser.json);
-            console.log(boneMaps);
-            AVATAR.neck = vrm.scene.children[3].skeleton.bones[12];
-            AVATAR.head = vrm.scene.children[3].skeleton.bones[13];
-            AVATAR.head = vrm.scene.getObjectByName(boneMaps["head"], true);
-            let leftUpperArm = vrm.scene.getObjectByName(boneMaps["leftUpperArm"], true);
-            let rightUpperArm = vrm.scene.getObjectByName(boneMaps["rightUpperArm"], true);
+            boneDictionary = createBoneDictionary(vrm.parser.json);
+            AVATAR.head = vrm.scene.getObjectByName(boneDictionary["head"], true);
+
+            //Tポーズから腕を下ろさせる
+            let leftUpperArm = vrm.scene.getObjectByName(boneDictionary["leftUpperArm"], true);
+            let rightUpperArm = vrm.scene.getObjectByName(boneDictionary["rightUpperArm"], true);
             leftUpperArm.rotation.z = Math.PI * (70 / 180);
             rightUpperArm.rotation.z = Math.PI * (-70 / 180);
 
 
-            //Vroid Only
-            //表情のブレンドシェイプ
-            //AVATAR.morphTarget = vrm.scene.getObjectByName("Face", true) || vrm.scene.getObjectByName("face", true);
-            //console.log(searchFaceMorph(vrm.scene));
+            //表情のモーフターゲットを名前検索で設定する
+            //jsonからsceneのモーフの特定方法がわからなかったため
             AVATAR.morphTarget = searchFaceMorph(vrm.scene);
-            expressionMapping(vrm.parser.json);
-            threeScene.add(vrm.scene);
-            AVATAR.VRM = vrm;
+            expressionDictionary = createExpressionDictionary(vrm.parser.json);
 
+            //three.jsのシーンへ追加
+            threeScene.add(vrm.scene);
+
+            //デバッグ用
+            AVATAR.VRM = vrm;
 
             //アニメーションの紐付け
             //[CHECK]
@@ -202,17 +234,16 @@ var AVATAR = AVATAR || {};
             //     }
             // });
             //AVATAR.mixers.push(mixer);
-
-
         });
 
     }
 
     //標準ボーンとモデル固有のボーン名の対応の連想配列を求める
-    //{standardBoneName: "modelsBoneName"}
     //例）
+    //{standardBoneName: "modelsBoneName",...}
     //{head            : "head"         ,hips: "waist",jaw: "mouth"...}
-    AVATAR.boneMapping = function (json) {
+    let boneDictionary;
+    let createBoneDictionary = function (json) {
         //VRM規格の標準ボーン
         const standardBone = ["hips", "leftUpperLeg", "rightUpperLeg", "leftLowerLeg", "rightLowerLeg", "leftFoot", "rightFoot", "spine", "chest", "neck", "head", "leftShoulder", "rightShoulder", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand", "leftToes", "rightToes", "leftEye", "rightEye", "jaw", "leftThumbProximal", "leftThumbIntermediate", "leftThumbDistal", "leftIndexProximal", "leftIndexIntermediate", "leftIndexDistal", "leftMiddleProximal", "leftMiddleIntermediate", "leftMiddleDistal", "leftRingProximal", "leftRingIntermediate", "leftRingDistal", "leftLittleProximal", "leftLittleIntermediate", "leftLittleDistal", "rightThumbProximal", "rightThumbIntermediate", "rightThumbDistal", "rightIndexProximal", "rightIndexIntermediate", "rightIndexDistal", "rightMiddleProximal", "rightMiddleIntermediate", "rightMiddleDistal", "rightRingProximal", "rightRingIntermediate", "rightRingDistal", "rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal", "upperChest"];
 
@@ -233,14 +264,14 @@ var AVATAR = AVATAR || {};
 
 
     //標準ブレンドシェイプへの連想配列を求める
-    //{standardBoneName: "modelsBoneName"}
     //例）
-    //{head            : "head"         ,hips: "waist",jaw: "mouth"...}
-    let expressionMap;
-    let expressionMapping = function (json) {
+    //{standardName : indexNumber,...}
+    //{a            : 28        ,blink: 11...}
+    let expressionDictionary;
+    let createExpressionDictionary = function (json) {
         //VRM規格の標準の表情
         const standardExpression = ["neutral", "a", "i", "u", "e", "o", "blink", "joy", "angry", "sorrow", "fun", "lookUp", "lookdown", "lookleft", "lookright", "blink_l", "blink_r", "unknown"]
-        let expression = {};
+        let expressions = {};
         const humanoid = new Object();
         humanoid.blendShapeGroups = json.extensions.VRM.blendShapeMaster.blendShapeGroups;
         standardExpression.forEach(key => {
@@ -248,12 +279,11 @@ var AVATAR = AVATAR || {};
                 blendShapeGroups => blendShapeGroups.presetName === key
             );
             if (target && (target.binds.length > 0)) {
-                expression[key] = target.binds[0].index;
+                expressions[key] = target.binds[0].index;
             }
 
         });
-        expressionMap = expression;
-        console.log(expressionMap);
+        return expressions;
     }
 
 
@@ -276,49 +306,7 @@ var AVATAR = AVATAR || {};
     }
 
 }(this));
-
 /*
-VRM morphTarget
-0	             "Face.M_F00_000_Fcl_ALL_Angry",
-1	              "Face.M_F00_000_Fcl_ALL_Fun",
-2	              "Face.M_F00_000_Fcl_ALL_Joy",
-3	              "Face.M_F00_000_Fcl_ALL_Sorrow",
-4	              "Face.M_F00_000_Fcl_ALL_Surprised",
-5	              "Face.M_F00_000_Fcl_BRW_Angry",
-6	              "Face.M_F00_000_Fcl_BRW_Fun",
-7	              "Face.M_F00_000_Fcl_BRW_Joy",
-8	              "Face.M_F00_000_Fcl_BRW_Sorrow",
-9	              "Face.M_F00_000_Fcl_BRW_Surprised",
-10	              "Face.M_F00_000_Fcl_EYE_Angry",
-11	              "Face.M_F00_000_Fcl_EYE_Close",
-12	              "Face.M_F00_000_Fcl_EYE_Close_R",
-13	              "Face.M_F00_000_Fcl_EYE_Close_L",
-14	              "Face.M_F00_000_Fcl_EYE_Joy",
-15	              "Face.M_F00_000_Fcl_EYE_Joy_R",
-16	              "Face.M_F00_000_Fcl_EYE_Joy_L",
-17	              "Face.M_F00_000_Fcl_EYE_Sorrow",
-18	              "Face.M_F00_000_Fcl_EYE_Surprised",
-19	              "Face.M_F00_000_Fcl_EYE_Extra",
-20	              "Face.M_F00_000_Fcl_MTH_Up",
-21	              "Face.M_F00_000_Fcl_MTH_Down",
-22	              "Face.M_F00_000_Fcl_MTH_Angry",
-23	              "Face.M_F00_000_Fcl_MTH_Neutral",
-24	              "Face.M_F00_000_Fcl_MTH_Fun",
-25	              "Face.M_F00_000_Fcl_MTH_Joy",
-26	              "Face.M_F00_000_Fcl_MTH_Sorrow",
-27	              "Face.M_F00_000_Fcl_MTH_Surprised",
-28	              "Face.M_F00_000_Fcl_MTH_A",
-29	              "Face.M_F00_000_Fcl_MTH_I",
-30	              "Face.M_F00_000_Fcl_MTH_U",
-31	              "Face.M_F00_000_Fcl_MTH_E",
-32	              "Face.M_F00_000_Fcl_MTH_O",
-33	              "Face.M_F00_000_Fcl_HA_Fung1",
-34	              "Face.M_F00_000_Fcl_HA_Fung1_Low",
-35	              "Face.M_F00_000_Fcl_HA_Fung1_Up",
-36	              "Face.M_F00_000_Fcl_HA_Fung2",
-37	              "Face.M_F00_000_Fcl_HA_Fung2_Low",
-38	              "Face.M_F00_000_Fcl_HA_Fung2_Up",
-39	              "EyeExtra.M_F00_000_EyeExtra_On"
 
 JEELIZ
 0: smileRight → closed mouth smile right

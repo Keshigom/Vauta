@@ -55,39 +55,9 @@ const clock = new THREE.Clock();
 //entry point :
 function main() {
 
-    initJeeliz();
     initThree();
+    AVATAR.init(avatarURL, scene);
     animate();
-}
-
-//function initJeeliz(videoElement) {
-function initJeeliz() {
-    //jeeliz init
-    JEEFACETRANSFERAPI.init({
-        canvasId: 'jeefacetransferCanvas',
-        NNCpath: '../lib/jeeliz/', //path to JSON neural network model (NNC.json by default)
-        // videoSettings: {
-        //     videoElement: videoElement
-        // },
-        callbackReady: function (errCode, spec) {
-            if (errCode) {
-                console.log('AN ERROR HAPPENS. ERROR CODE =', errCode);
-                return;
-            }
-            // [init scene with spec...]
-            console.log('INFO: JEEFACEFILTERAPI IS READY');
-            isReady = true;
-            AVATAR.errorFlag = false;
-        }, //end callbackReady()
-
-        //called at each render iteration (drawing loop)
-
-        callbackTrack: function (detectState) {
-            console.log("callback");
-            console.log(detectState);
-        } //end callbackTrack()
-    });//end init call
-
 }
 
 function initThree() {
@@ -108,8 +78,6 @@ function initThree() {
     light.position.set(0, 1, 0);
     scene.add(light);
 
-    AVATAR.loadVRM(scene);
-
     // レンダラー設定
     //renderer = new THREE.WebGLRenderer({ antialias: true });
     //renderer.setPixelRatio(window.devicePixelRatio);
@@ -123,7 +91,12 @@ function initThree() {
 
     // stats
     stats = new Stats();
-    container.appendChild(stats.dom);
+    stats.dom.style.position = "relative"
+    stats.dom.style.top = "5px";
+    stats.dom.style.margin = "auto";
+
+    // document.body.appendChild(stats.getDomElement());
+    document.getElementById("debugWindow").appendChild(stats.dom);
 
 }
 

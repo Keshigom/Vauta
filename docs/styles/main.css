@@ -25,12 +25,13 @@ body {
     z-index: 200;
     position: absolute;
     bottom: 0px;
-    left: 0px;
+    right: 0px;
     max-height: 25vh;
 }
 
 .webojiCanvas {
     z-index: 0;
+    display: none;
     position: absolute;
     max-height: 100%;
     max-width: 100%;

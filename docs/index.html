@@ -1,8 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
 
 <head>
-	<title>three.js webgl - vrm loader</title>
+	<title>Vauta</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="styles/main.css">
@@ -10,21 +9,24 @@
 
 </head>
 
-<body onload>
+<body>
 	<div id="info">
 		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - VRMLoader<br />
 		<a href="https://jeeliz.com/" target="_blank" rel="noopener">Jeeliz</a> -detect facial expressions<br />
-		<!-- <a href="https://3d.nicovideo.jp/works/td32797" target="_blank" rel="noopener">Dwango</a> / -->
-		<!-- <a href="http://3d.nicovideo.jp/alicia/rule.html">License</a><br /> -->
 	</div>
 	<canvas class='jeefacetransferCanvas' id='jeefacetransferCanvas'></canvas>
+
 	<canvas class='webojiCanvas' id='webojiCanvas' width='0' height='0'></canvas>
+
 	<div id="debugWindow">
+
 		<div>Debug Message Window</div>
 		<div>Face Data</div>
 		<div id="faceData"></div>
 	</div>
 	<div id="dropbox">
+		<div>ここにファイルをドラッグ＆ドロップ</div>
+		<div>または</div>
 		<input type="file" id="input" onchange="handleFiles(this.files)">
 
 	</div>
@@ -38,7 +40,7 @@
 
 	<script src="lib/WebGL.js"></script>
 	<script src="lib/stats.min.js"></script>
-	<script src="js/animationLoader.js"></script>
+	<!-- <script src="js/animationLoader.js"></script> -->
 	<script src="js/vautaAvatar.js"></script>
 
 	<script src="js/index.js"></script>
