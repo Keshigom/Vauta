@@ -54,7 +54,6 @@ const clock = new THREE.Clock();
 
 //entry point :
 function main() {
-
     initThree();
     AVATAR.init(avatarURL, scene);
     animate();
@@ -132,3 +131,4 @@ function animate() {
 
 }
 
+document.getElementById("debugWindow").style.display = "none";

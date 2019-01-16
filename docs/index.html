@@ -12,7 +12,9 @@
 <body>
 	<div id="info">
 		<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - VRMLoader<br />
-		<a href="https://jeeliz.com/" target="_blank" rel="noopener">Jeeliz</a> -detect facial expressions<br />
+		<a href="https://jeeliz.com/" target="_blank" rel="noopener">
+			<img src="assets/img/LOGO_JEELIZ_BLUE.png" style="height: 25px" alt="">
+		</a>
 	</div>
 	<canvas class='jeefacetransferCanvas' id='jeefacetransferCanvas'></canvas>
 
@@ -25,9 +27,10 @@
 		<div id="faceData"></div>
 	</div>
 	<div id="dropbox">
-		<div>ここにファイルをドラッグ＆ドロップ</div>
-		<div>または</div>
-		<input type="file" id="input" onchange="handleFiles(this.files)">
+		<div>ここに.vrmファイルをドラッグ＆ドロップ</div>
+		<div>または
+			<input type="file" id="input" onchange="handleFiles(this.files)">
+		</div>
 
 	</div>
 

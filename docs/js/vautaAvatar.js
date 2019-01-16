@@ -39,6 +39,7 @@ var AVATAR = AVATAR || {};
                 console.log('INFO: JEEFACEFILTERAPI IS READY');
                 isReady = true;//グローバル
                 AVATAR.errorFlag = false;
+                JEEFACETRANSFERAPI.switch_displayVideo(false);
             }, //end callbackReady()
 
             //called at each render iteration (drawing loop)
