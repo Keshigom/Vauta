@@ -17,8 +17,10 @@ var AVATAR = AVATAR || {};
 
     AVATAR.morphTarget;
 
-    AVATAR.rawExpressions;
-    AVATAR.filteredExpressions;
+    AVATAR.rawExpressions = new Array(17);
+    AVATAR.rawExpressions.fill(0);
+    AVATAR.filteredExpressions = new Array(17);
+    AVATAR.filteredExpressions.fill(0);
 
     AVATAR.init = function (avatarFileURL, threeScene) {
         initJeeliz();
@@ -57,8 +59,10 @@ var AVATAR = AVATAR || {};
 
     AVATAR.errorFlag = false;
     AVATAR.UpdateExpression = function () {
+        convertExpression();
 
 
+        // 暫定的な実装
         if (AVATAR.head != undefined) {
             let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
             if (Number.isNaN(faceRotaion[0])) {
@@ -68,14 +72,20 @@ var AVATAR = AVATAR || {};
                     JEEFACETRANSFERAPI.initialized = false;
                     initJeeliz();
                 }
-
-                //JEEFACEFILTERAPI.toggle_pause(true); 
-                //JEEFACEFILTERAPI.toggle_pause(false);
                 return;
             }
             AVATAR.head.rotation.x = -faceRotaion[0];
             AVATAR.head.rotation.y = faceRotaion[1];
             AVATAR.head.rotation.z = -faceRotaion[2];
+
+            //正面に瞳を合わせる
+            AVATAR.eyeR.rotation.x = faceRotaion[0] / 2;
+            AVATAR.eyeR.rotation.y = -faceRotaion[1] / 2;
+            //  AVATAR.eyeR.rotation.z = faceRotaion[2] / 2;
+            AVATAR.eyeL.rotation.x = faceRotaion[0] / 2;
+            AVATAR.eyeL.rotation.y = -faceRotaion[1] / 2;
+            //AVATAR.eyeL.rotation.z = faceRotaion[2] / 2;
+
         }
 
         if (AVATAR.morphTarget != undefined && AVATAR.morphTarget.morphTargetInfluences != undefined) {
@@ -107,7 +117,7 @@ var AVATAR = AVATAR || {};
             AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["u"]] = faceExpression[7] * 0.7;
 
 
-
+            //CHECK
             //Vroidのみ正常に動作
             //眉　↑
             AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
@@ -205,6 +215,9 @@ var AVATAR = AVATAR || {};
             boneDictionary = createBoneDictionary(vrm.parser.json);
             console.log(boneDictionary);
             AVATAR.head = vrm.scene.getObjectByName(boneDictionary["head"], true);
+            AVATAR.eyeR = vrm.scene.getObjectByName(boneDictionary["rightEye"], true);
+            AVATAR.eyeL = vrm.scene.getObjectByName(boneDictionary["leftEye"], true);
+
 
             //Tポーズから腕を下ろさせる
             let leftUpperArm = vrm.scene.getObjectByName(boneDictionary["leftUpperArm"], true);
@@ -310,6 +323,55 @@ var AVATAR = AVATAR || {};
         }
     }
 
+    //jeelizの表情データをVRM用に変換する。
+    let convertExpression = function () {
+        let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
+        if (Number.isNaN(faceExpression[0])) {
+            if (!AVATAR.errorFlag) {
+                console.log("トラッキングエラー:NaN");
+                AVATAR.errorFlag = true;
+                JEEFACETRANSFERAPI.initialized = false;
+                initJeeliz();
+            }
+
+            //JEEFACEFILTERAPI.toggle_pause(true); 
+            //JEEFACEFILTERAPI.toggle_pause(false);
+            return;
+        }
+
+        //eyeRightClose -> "blink_r"
+        AVATAR.rawExpressions[16] = faceExpression[9];
+        //eyeLeftClose ->    "blink_l",
+        AVATAR.rawExpressions[15] = faceExpression[8];
+
+        // mouthOpen -> "a"
+        AVATAR.rawExpressions[1] = faceExpression[6];
+        // mouthOpen & mouthRound -> "o"
+        AVATAR.rawExpressions[5] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+        // mouthRound -> "u"
+        AVATAR.rawExpressions[3] = faceExpression[7] * 0.7;
+
+        //Vroidのみ正常に動作
+        // //眉　↑
+        // AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
+
+        // //眉　↓
+        // AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
+
+        // //くち 笑顔
+        // AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] * 0.5 + faceExpression[1] * 0.5;
+    }
+
+    //入力データに閾値を適用する。
+    let applyThreshold = function () {
+
+    }
+
+    //表情状態をモデルに適用する。
+    let applyExpression = function () {
+
+    }
+
 }(this));
 /*
 
@@ -325,5 +387,25 @@ JEELIZ
 8: eyeRightClose → close right eye
 9: eyeLeftClose → close left eye
 10: mouthNasty → mouth nasty (upper lip raised)
+
+VRM
+0:   "neutral",
+1:   "a",
+2:   "i",
+3:   "u",
+4:   "e",
+5:   "o",
+6:   "blink",
+7:   "joy",
+8:   "angry",
+9:   "sorrow",
+10:  "fun",
+11:  "lookUp",
+12:  "lookdown",
+13:  "lookleft",
+14:  "lookright",
+15:  "blink_l",
+16:  "blink_r",
+17:  "unknown"
 
  */
