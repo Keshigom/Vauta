@@ -12,6 +12,7 @@ var AVATAR = AVATAR || {};
     AVATAR.mixers = new Array();
     AVATAR.neck;
     AVATAR.head;
+    AVATAR.upperChest;
     AVATAR.eyeR;
     AVATAR.eyeL;
 
@@ -70,10 +71,20 @@ var AVATAR = AVATAR || {};
                 }
                 return;
             }
-            AVATAR.head.rotation.x = -faceRotaion[0];
-            AVATAR.head.rotation.y = faceRotaion[1];
-            AVATAR.head.rotation.z = -faceRotaion[2];
-
+            const headW = 0.5;
+            const neckW = 0.3;
+            const chesW = 0.2;
+            AVATAR.head.rotation.x = -faceRotaion[0] * headW;
+            AVATAR.head.rotation.y = faceRotaion[1] * headW;
+            AVATAR.head.rotation.z = -faceRotaion[2] * headW;
+            AVATAR.neck.rotation.x = -faceRotaion[0] * neckW;
+            AVATAR.neck.rotation.y = faceRotaion[1] * neckW;
+            AVATAR.neck.rotation.z = -faceRotaion[2] * neckW;
+            if (AVATAR.upperChest) {
+                AVATAR.upperChest.rotation.x = -faceRotaion[0] * chesW;
+                AVATAR.upperChest.rotation.y = faceRotaion[1] * chesW;
+                AVATAR.upperChest.rotation.z = -faceRotaion[2] * chesW;
+            }
             //正面に瞳を合わせる
             AVATAR.eyeR.rotation.x = faceRotaion[0] / 2;
             AVATAR.eyeR.rotation.y = -faceRotaion[1] / 2;
@@ -182,6 +193,9 @@ var AVATAR = AVATAR || {};
             //ボーンの設定
             boneDictionary = createBoneDictionary(vrm.parser.json);
             AVATAR.head = vrm.scene.getObjectByName(boneDictionary["head"], true);
+            AVATAR.neck = vrm.scene.getObjectByName(boneDictionary["neck"], true);
+            AVATAR.upperChest = vrm.scene.getObjectByName(boneDictionary["upperChest"], true) || vrm.scene.getObjectByName(boneDictionary["chest"], true);
+
             AVATAR.eyeR = vrm.scene.getObjectByName(boneDictionary["rightEye"], true);
             AVATAR.eyeL = vrm.scene.getObjectByName(boneDictionary["leftEye"], true);
 
