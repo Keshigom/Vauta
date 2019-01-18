@@ -19,9 +19,6 @@ var AVATAR = AVATAR || {};
     AVATAR.rawExpressions = {};
     AVATAR.filteredExpressions = {};
 
-    //option　 追加要素　OFFにできるでー
-    //settings 
-
     AVATAR.init = function (avatarFileURL, threeScene) {
         initJeeliz();
         loadVRM(avatarFileURL, threeScene);
@@ -90,8 +87,10 @@ var AVATAR = AVATAR || {};
             return;
         }
 
+        //頭の向きの追従
         applyHeadRotation(faceRotaion);
 
+        //表情
         convertExpression(faceExpression);
         applyThreshold();
         applyExpression();
