@@ -131,4 +131,4 @@ function animate() {
 
 }
 
-document.getElementById("debugWindow").style.display = "none";
+//document.getElementById("debugWindow").style.display = "none";

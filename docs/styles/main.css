@@ -57,6 +57,8 @@ body {
 #debugWindow {
     z-index: 200;
     position: absolute;
+    max-width: 250px;
+    width: 50%;
     top: 0px;
     right: 0px;
     /* max-height: 25vh; */

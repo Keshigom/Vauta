@@ -16,14 +16,16 @@ var AVATAR = AVATAR || {};
     AVATAR.eyeR;
     AVATAR.eyeL;
 
-    AVATAR.rawExpressions = new Array(17);
-    AVATAR.rawExpressions.fill(0);
-    AVATAR.filteredExpressions = new Array(17);
-    AVATAR.filteredExpressions.fill(0);
+    AVATAR.rawExpressions = {};
+    AVATAR.filteredExpressions = {};
+
+    //option　 追加要素　OFFにできるでー
+    //settings 
 
     AVATAR.init = function (avatarFileURL, threeScene) {
         initJeeliz();
         loadVRM(avatarFileURL, threeScene);
+        initThreshold();
     };
 
     //jeelizFaceTransfer.js及び*NNC.jsonが必要です
@@ -56,56 +58,39 @@ var AVATAR = AVATAR || {};
 
     }
 
+    const initThreshold = function () {
+        const standard = [
+            "neutral",
+            "a", "i", "u", "e", "o",
+            "blink", "joy", "angry", "sorrow", "fun", "lookUp", "lookdown", "lookleft", "lookright",
+            "blink_l", "blink_r"];
+
+        standard.forEach(function (target) {
+            //無変化の閾値
+            AVATAR.setSetting(0, "offThreshold", target);
+            //最大変化の閾値
+            AVATAR.setSetting(1, "onThreshold", target);
+        });
+    }
+
+
     AVATAR.errorFlag = false;
     AVATAR.UpdateExpression = function () {
 
-        // 暫定的な実装
-        if (AVATAR.head != undefined) {
-            let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
-            if (Number.isNaN(faceRotaion[0])) {
-                if (!AVATAR.errorFlag) {
-                    console.log("トラッキングエラー:NaN");
-                    AVATAR.errorFlag = true;
-                    JEEFACETRANSFERAPI.initialized = false;
-                    initJeeliz();
-                }
-                return;
-            }
-            const headW = 0.5;
-            const neckW = 0.3;
-            const chesW = 0.2;
-            AVATAR.head.rotation.x = -faceRotaion[0] * headW;
-            AVATAR.head.rotation.y = faceRotaion[1] * headW;
-            AVATAR.head.rotation.z = -faceRotaion[2] * headW;
-            AVATAR.neck.rotation.x = -faceRotaion[0] * neckW;
-            AVATAR.neck.rotation.y = faceRotaion[1] * neckW;
-            AVATAR.neck.rotation.z = -faceRotaion[2] * neckW;
-            if (AVATAR.upperChest) {
-                AVATAR.upperChest.rotation.x = -faceRotaion[0] * chesW;
-                AVATAR.upperChest.rotation.y = faceRotaion[1] * chesW;
-                AVATAR.upperChest.rotation.z = -faceRotaion[2] * chesW;
-            }
-            //正面に瞳を合わせる
-            AVATAR.eyeR.rotation.x = faceRotaion[0] / 2;
-            AVATAR.eyeR.rotation.y = -faceRotaion[1] / 2;
-            //  AVATAR.eyeR.rotation.z = faceRotaion[2] / 2;
-            AVATAR.eyeL.rotation.x = faceRotaion[0] / 2;
-            AVATAR.eyeL.rotation.y = -faceRotaion[1] / 2;
-            //AVATAR.eyeL.rotation.z = faceRotaion[2] / 2;
-
-        }
-
+        //jeelizのgetメソッドがNaNしか返さなくなる場合がある。
+        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
         let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-        if (Number.isNaN(faceExpression[0])) {
+        if (Number.isNaN(faceRotaion[0]) || Number.isNaN(faceExpression[0])) {
             if (!AVATAR.errorFlag) {
-                console.log("トラッキングエラー:NaN");
+                console.log("トラッキングエラー");
                 AVATAR.errorFlag = true;
                 JEEFACETRANSFERAPI.initialized = false;
                 initJeeliz();
             }
-
             return;
         }
+
+        applyHeadRotation(faceRotaion);
 
         convertExpression(faceExpression);
         applyThreshold();
@@ -113,25 +98,61 @@ var AVATAR = AVATAR || {};
 
     };
 
+    const applyHeadRotation = function (faceRotaions) {
+        let faceRotaion = [
+            AVATAR.getSetting("headOffset", "x") + faceRotaions[0],
+            AVATAR.getSetting("headOffset", "y") + faceRotaions[1],
+            AVATAR.getSetting("headOffset", "z") + faceRotaions[2]];
 
-    AVATAR.debugMessage = function () {
-        let message;
-        let target = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-        message =
-            "0: smileRight → closed mouth smile right           " + target[0].toFixed(4) + "<br>" +
-            "1: smileLeft → closed mouth smile left             " + target[1].toFixed(4) + "<br>" +
-            "2: eyeBrowLeftDown → eyebrow left frowned          " + target[2].toFixed(4) + "<br>" +
-            "3: eyeBrowRightDown → eyebrow right frowned        " + target[3].toFixed(4) + "<br>" +
-            "4: eyeBrowLeftUp → eyebrow left up(surprised)      " + target[4].toFixed(4) + "<br>" +
-            "5: eyeBrowRightUp → eyebrow right up(surprised)    " + target[5].toFixed(4) + "<br>" +
-            "6: mouthOpen → mouth open                          " + target[6].toFixed(4) + "<br>" +
-            "7: mouthRound → mouth round                        " + target[7].toFixed(4) + "<br>" +
-            "8: eyeRightClose → close right eye                 " + target[8].toFixed(4) + "<br>" +
-            "9: eyeLeftClose → close left eye                   " + target[9].toFixed(4) + "<br>" +
-            "10: mouthNasty → mouth nasty(upper lip raised)     " + target[10].toFixed(4) + "<br>";
+        let xd = -1, yd = -1, zd = 1;
+        if (AVATAR.getSetting("isMirror")) {
+            yd = 1;
+            zd = -1;
+        }
 
-        return message;
-    };
+
+        if (AVATAR.head != undefined) {
+
+            let headW = 0.5;
+            let neckW = 0.3;
+            let chesW = 0.2;
+
+            if (AVATAR.upperChest) {
+                AVATAR.upperChest.rotation.x = xd * faceRotaion[0] * chesW;
+                AVATAR.upperChest.rotation.y = yd * faceRotaion[1] * chesW;
+                AVATAR.upperChest.rotation.z = zd * faceRotaion[2] * chesW;
+            }
+            else {
+                headW = 0.7;
+                neckW = 0.3;
+            }
+
+            if (AVATAR.neck) {
+                AVATAR.neck.rotation.x = xd * faceRotaion[0] * neckW;
+                AVATAR.neck.rotation.y = yd * faceRotaion[1] * neckW;
+                AVATAR.neck.rotation.z = zd * faceRotaion[2] * neckW;
+            }
+            else {
+                headW = 1.0;
+            }
+
+            AVATAR.head.rotation.x = xd * faceRotaion[0] * headW;
+            AVATAR.head.rotation.y = yd * faceRotaion[1] * headW;
+            AVATAR.head.rotation.z = zd * faceRotaion[2] * headW;
+
+            //正面に瞳を合わせる
+            AVATAR.eyeR.rotation.x = xd * -faceRotaion[0] / 2;
+            AVATAR.eyeR.rotation.y = yd * -faceRotaion[1] / 2;
+            //  AVATAR.eyeR.rotation.z = faceRotaion[2] / 2;
+            AVATAR.eyeL.rotation.x = xd * -faceRotaion[0] / 2;
+            AVATAR.eyeL.rotation.y = yd * -faceRotaion[1] / 2;
+            //AVATAR.eyeL.rotation.z = faceRotaion[2] / 2;
+
+        }
+
+    }
+
+
 
     //animation
     //[CHECK]
@@ -257,8 +278,6 @@ var AVATAR = AVATAR || {};
         return boneMap;
     }
 
-
-
     //標準ブレンドシェイプとthreeオブジェクトと結びつける
     AVATAR.createShapeDictionary = function (vrm) {
         //VRM規格の標準の表情
@@ -324,7 +343,6 @@ var AVATAR = AVATAR || {};
     }
 
     AVATAR.blendShapeDictionary;
-
     //表情ブレンドシェイプを上書きする。
     //競合があった場合最後に実行されたもので上書きされる。
     AVATAR.expressionSetValue = function (key, value) {
@@ -337,37 +355,109 @@ var AVATAR = AVATAR || {};
     //jeelizの表情データをVRM用に変換する。
     const convertExpression = function (faceExpression) {
 
-        //eyeRightClose -> "blink_r"
-        AVATAR.rawExpressions[16] = faceExpression[9];
-        //eyeLeftClose ->    "blink_l",
-        AVATAR.rawExpressions[15] = faceExpression[8];
+        if (AVATAR.getSetting("isMirror")) {
+            //eyeRightClose
+            AVATAR.rawExpressions["blink_r"] = faceExpression[9];
+            //eyeLeftClose
+            AVATAR.rawExpressions["blink_l"] = faceExpression[8];
+        }
+        else {
+            //eyeRightClose
+            AVATAR.rawExpressions["blink_r"] = faceExpression[8];
+            //eyeLeftClose
+            AVATAR.rawExpressions["blink_l"] = faceExpression[9];
+        }
         // mouthOpen -> "a"
-        AVATAR.rawExpressions[1] = faceExpression[6];
+        AVATAR.rawExpressions["a"] = faceExpression[6];
         // mouthOpen & mouthRound -> "o"
-        AVATAR.rawExpressions[5] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+        AVATAR.rawExpressions["o"] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
         // mouthRound -> "u"
-        AVATAR.rawExpressions[3] = faceExpression[7] * 0.7;
+        AVATAR.rawExpressions["u"] = faceExpression[7] * 0.7;
     }
 
     //入力データに閾値を適用する。
     const applyThreshold = function () {
-        AVATAR.rawExpressions.forEach(
-            function (value, index) {
-                AVATAR.filteredExpressions[index] = value;
-            }
-        );
+        for (let index in AVATAR.rawExpressions) {
+            const offThreshold = AVATAR.getSetting("offThreshold", index);
+            const onThreshold = AVATAR.getSetting("onThreshold", index);
+            let value = AVATAR.rawExpressions[index];
+            if (value < offThreshold || offThreshold >= 1) value = 0;
+            if (value > onThreshold || onThreshold <= 0) value = 1;
+            AVATAR.filteredExpressions[index] = value;
+        }
     }
 
     //表情状態をモデルに適用する。
     const applyExpression = function () {
-
-        AVATAR.expressionSetValue("blink_r", AVATAR.filteredExpressions[16]);
-        AVATAR.expressionSetValue("blink_l", AVATAR.filteredExpressions[15]);
-        AVATAR.expressionSetValue("a", AVATAR.filteredExpressions[1]);
-        AVATAR.expressionSetValue("o", AVATAR.filteredExpressions[5]);
-        AVATAR.expressionSetValue("u", AVATAR.filteredExpressions[3]);
-
+        AVATAR.expressionSetValue("blink_r", AVATAR.filteredExpressions["blink_r"]);
+        AVATAR.expressionSetValue("blink_l", AVATAR.filteredExpressions["blink_l"]);
+        AVATAR.expressionSetValue("a", AVATAR.filteredExpressions["a"]);
+        AVATAR.expressionSetValue("o", AVATAR.filteredExpressions["o"]);
+        AVATAR.expressionSetValue("u", AVATAR.filteredExpressions["u"]);
     }
+
+
+    // 設定項目
+    // settings[type][key] 
+    let settings = {
+        "offThreshold": {},     //無変化の閾値
+        "onThreshold": {},      //最大変化の閾値
+        "isMirror": true,       //鏡のように動作させる（右目を閉じるとアバターは左目を閉じる）
+        "headOffset": {         //顔の向きが中心になるように調整する
+            "x": 0,
+            "y": 0,
+            "z": 0,              //y,z は非推奨
+        }
+    };
+
+    AVATAR.setSetting = function (value, key1, key2) {
+        if (key2) {
+            settings[key1][key2] = value;
+            return;
+        }
+        settings[key1] = value;
+    }
+    AVATAR.getSetting = function (key1, key2) {
+        if (key2) {
+            return settings[key1][key2];
+        }
+        return settings[key1];
+    }
+    AVATAR.getAllsettings = function () { return settings; }
+
+    AVATAR.debugMessage = function () {
+        let message;
+        let target = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
+        message =
+            "Jeeliz Input <br>" +
+            "<div><span>0: smileRight </span><span style='right:0px;position: absolute;'> → " + target[0].toFixed(4) + "</span></div>" +
+            "<div><span>1: smileLeft </span><span style='right:0px;position: absolute;'> →  " + target[1].toFixed(4) + "</span></div>" +
+            "<div><span>2: eyeBrowLeftDown </span><span style='right:0px;position: absolute;'> → " + target[2].toFixed(4) + "</span></div>" +
+            "<div><span>3: eyeBrowRightDown </span><span style='right:0px;position: absolute;'> → " + target[3].toFixed(4) + "</span></div>" +
+            "<div><span>4: eyeBrowLeftUp </span><span style='right:0px;position: absolute;'> → " + target[4].toFixed(4) + "</span></div>" +
+            "<div><span>5: eyeBrowRightUp </span><span style='right:0px;position: absolute;'> → " + target[5].toFixed(4) + "</span></div>" +
+            "<div><span>6: mouthOpen </span><span style='right:0px;position: absolute;'> →  " + target[6].toFixed(4) + "</span></div>" +
+            "<div><span>7: mouthRound </span><span style='right:0px;position: absolute;'> → " + target[7].toFixed(4) + "</span></div>" +
+            "<div><span>8: eyeRightClose </span><span style='right:0px;position: absolute;'> →  " + target[8].toFixed(4) + "</span></div>" +
+            "<div><span>9: eyeLeftClose </span><span style='right:0px;position: absolute;'> → " + target[9].toFixed(4) + "</span></div>" +
+            "<div><span>10: mouthNasty </span><span style='right:0px;position: absolute;'> → " + target[10].toFixed(4) + "</span></div>" +
+            "<br>";
+
+        message +=
+            "Facial Expression<br>" +
+            "<div><span>name </span><span style='right:0px;position: absolute;'>     : input (OFF- ON)output</span></div>";
+        for (let index in AVATAR.rawExpressions) {
+            const offThreshold = AVATAR.getSetting("offThreshold", index);
+            const onThreshold = AVATAR.getSetting("onThreshold", index);
+            message +=
+                "<div><span>" + index + "</span><span style='right:0px;position: absolute;'>  :  " +
+                AVATAR.rawExpressions[index].toFixed(3) +
+                " ( " + offThreshold + " - " +
+                onThreshold + " ) " +
+                AVATAR.filteredExpressions[index].toFixed(3) + "</span><div>";
+        }
+        return message;
+    };
 
 
 }(this));
@@ -405,4 +495,5 @@ VRM
 16:  "blink_r",
 17:  "unknown"
 
+人は誰かになれる
  */
