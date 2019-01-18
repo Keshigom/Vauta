@@ -15,8 +15,6 @@ var AVATAR = AVATAR || {};
     AVATAR.eyeR;
     AVATAR.eyeL;
 
-    AVATAR.morphTarget;
-
     AVATAR.rawExpressions = new Array(17);
     AVATAR.rawExpressions.fill(0);
     AVATAR.filteredExpressions = new Array(17);
@@ -28,7 +26,7 @@ var AVATAR = AVATAR || {};
     };
 
     //jeelizFaceTransfer.js及び*NNC.jsonが必要です
-    let initJeeliz = function () {
+    const initJeeliz = function () {
         JEEFACETRANSFERAPI.init({
             canvasId: 'jeefacetransferCanvas',
             NNCpath: '../lib/jeeliz/', //path to JSON neural network model (NNC.json by default)
@@ -95,31 +93,12 @@ var AVATAR = AVATAR || {};
                 initJeeliz();
             }
 
-
-            //JEEFACEFILTERAPI.toggle_pause(true); 
-            //JEEFACEFILTERAPI.toggle_pause(false);
             return;
         }
+
         convertExpression(faceExpression);
         applyThreshold();
         applyExpression();
-
-
-
-        // //CHECK
-        // //Vroidのみ正常に動作
-        // //眉　↑
-        // AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
-
-        // //眉　↓
-        // AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
-
-        // //くち 笑顔
-        // AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] * 0.5 + faceExpression[1] * 0.5;
-
-
-
-
 
     };
 
@@ -214,11 +193,6 @@ var AVATAR = AVATAR || {};
             rightUpperArm.rotation.z = Math.PI * (-70 / 180);
 
 
-            //表情のモーフターゲットを名前検索で設定する
-            //jsonからsceneのモーフの特定方法がわからなかったため
-            //AVATAR.morphTarget = searchFaceMorph(vrm.scene);
-            expressionDictionary = createExpressionDictionary(vrm.parser.json);
-
             AVATAR.blendShapeDictionary = AVATAR.createShapeDictionary(vrm);
             //three.jsのシーンへ追加
             threeScene.add(vrm.scene);
@@ -250,7 +224,7 @@ var AVATAR = AVATAR || {};
     //{standardBoneName: "modelsBoneName",...}
     //{head            : "head"         ,hips: "waist",jaw: "mouth"...}
     let boneDictionary;
-    let createBoneDictionary = function (json) {
+    const createBoneDictionary = function (json) {
         //VRM規格の標準ボーン
         const standardBone = ["hips", "leftUpperLeg", "rightUpperLeg", "leftLowerLeg", "rightLowerLeg", "leftFoot", "rightFoot", "spine", "chest", "neck", "head", "leftShoulder", "rightShoulder", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand", "leftToes", "rightToes", "leftEye", "rightEye", "jaw", "leftThumbProximal", "leftThumbIntermediate", "leftThumbDistal", "leftIndexProximal", "leftIndexIntermediate", "leftIndexDistal", "leftMiddleProximal", "leftMiddleIntermediate", "leftMiddleDistal", "leftRingProximal", "leftRingIntermediate", "leftRingDistal", "leftLittleProximal", "leftLittleIntermediate", "leftLittleDistal", "rightThumbProximal", "rightThumbIntermediate", "rightThumbDistal", "rightIndexProximal", "rightIndexIntermediate", "rightIndexDistal", "rightMiddleProximal", "rightMiddleIntermediate", "rightMiddleDistal", "rightRingProximal", "rightRingIntermediate", "rightRingDistal", "rightLittleProximal", "rightLittleIntermediate", "rightLittleDistal", "upperChest"];
 
@@ -270,30 +244,8 @@ var AVATAR = AVATAR || {};
     }
 
 
-    //標準ブレンドシェイプへの連想配列を求める
-    //例）
-    //{standardName : indexNumber,...}
-    //{a            : 28        ,blink: 11...}
-    let expressionDictionary;
-    let createExpressionDictionary = function (json) {
-        //VRM規格の標準の表情
-        const standardExpression = ["neutral", "a", "i", "u", "e", "o", "blink", "joy", "angry", "sorrow", "fun", "lookUp", "lookdown", "lookleft", "lookright", "blink_l", "blink_r", "unknown"]
-        let expressions = {};
-        const humanoid = new Object();
-        humanoid.blendShapeGroups = json.extensions.VRM.blendShapeMaster.blendShapeGroups;
-        standardExpression.forEach(key => {
-            const target = humanoid.blendShapeGroups.find(
-                blendShapeGroups => blendShapeGroups.presetName === key
-            );
-            if (target && (target.binds.length > 0)) {
-                expressions[key] = target.binds[0].index;
-            }
 
-        });
-        console.log(expressions);
-        return expressions;
-    }
-
+    //標準ブレンドシェイプとthreeオブジェクトと結びつける
     AVATAR.createShapeDictionary = function (vrm) {
         //VRM規格の標準の表情
         const json = vrm.parser.json
@@ -335,8 +287,7 @@ var AVATAR = AVATAR || {};
 
         const getMorphTarget = function (name) {
             const targetObj = vrm.scene.getObjectByName(name);
-            // targetObj != undefinde
-            if (targetObj) {
+            if (targetObj != undefined) {
                 if (targetObj.morphTargetInfluences != undefined) {
                     return targetObj.morphTargetInfluences;
 
@@ -359,6 +310,9 @@ var AVATAR = AVATAR || {};
     }
 
     AVATAR.blendShapeDictionary;
+
+    //表情ブレンドシェイプを上書きする。
+    //競合があった場合最後に実行されたもので上書きされる。
     AVATAR.expressionSetValue = function (key, value) {
         AVATAR.blendShapeDictionary[key].targets.forEach(function (target) {
             target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
@@ -373,23 +327,12 @@ var AVATAR = AVATAR || {};
         AVATAR.rawExpressions[16] = faceExpression[9];
         //eyeLeftClose ->    "blink_l",
         AVATAR.rawExpressions[15] = faceExpression[8];
-
         // mouthOpen -> "a"
         AVATAR.rawExpressions[1] = faceExpression[6];
         // mouthOpen & mouthRound -> "o"
         AVATAR.rawExpressions[5] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
         // mouthRound -> "u"
         AVATAR.rawExpressions[3] = faceExpression[7] * 0.7;
-
-        //Vroidのみ正常に動作
-        // //眉　↑
-        // AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
-
-        // //眉　↓
-        // AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
-
-        // //くち 笑顔
-        // AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] * 0.5 + faceExpression[1] * 0.5;
     }
 
     //入力データに閾値を適用する。
