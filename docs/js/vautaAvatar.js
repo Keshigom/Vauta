@@ -59,8 +59,6 @@ var AVATAR = AVATAR || {};
 
     AVATAR.errorFlag = false;
     AVATAR.UpdateExpression = function () {
-        convertExpression();
-
 
         // 暫定的な実装
         if (AVATAR.head != undefined) {
@@ -88,49 +86,40 @@ var AVATAR = AVATAR || {};
 
         }
 
-        if (AVATAR.morphTarget != undefined && AVATAR.morphTarget.morphTargetInfluences != undefined) {
-            let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-            if (Number.isNaN(faceExpression[0])) {
-                if (!AVATAR.errorFlag) {
-                    console.log("トラッキングエラー:NaN");
-                    AVATAR.errorFlag = true;
-                    JEEFACETRANSFERAPI.initialized = false;
-                    initJeeliz();
-                }
-
-                //JEEFACEFILTERAPI.toggle_pause(true); 
-                //JEEFACEFILTERAPI.toggle_pause(false);
-                return;
+        let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
+        if (Number.isNaN(faceExpression[0])) {
+            if (!AVATAR.errorFlag) {
+                console.log("トラッキングエラー:NaN");
+                AVATAR.errorFlag = true;
+                JEEFACETRANSFERAPI.initialized = false;
+                initJeeliz();
             }
 
 
-            //R eye,"blink_l","blink_r",
-            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["blink_r"]] = faceExpression[9];
-            //L eye
-            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["blink_l"]] = faceExpression[8];
-
-            //くちA
-            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["a"]] = faceExpression[6];
-            //くちO
-            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["o"]] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
-            //くちu
-            AVATAR.morphTarget.morphTargetInfluences[expressionDictionary["u"]] = faceExpression[7] * 0.7;
-
-
-            //CHECK
-            //Vroidのみ正常に動作
-            //眉　↑
-            AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
-
-            //眉　↓
-            AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
-
-            //くち 笑顔
-            AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] * 0.5 + faceExpression[1] * 0.5;
-
-
-
+            //JEEFACEFILTERAPI.toggle_pause(true); 
+            //JEEFACEFILTERAPI.toggle_pause(false);
+            return;
         }
+        convertExpression(faceExpression);
+        applyThreshold();
+        applyExpression();
+
+
+
+        // //CHECK
+        // //Vroidのみ正常に動作
+        // //眉　↑
+        // AVATAR.morphTarget.morphTargetInfluences[6] = (faceExpression[4] + faceExpression[5]) * 0.5;
+
+        // //眉　↓
+        // AVATAR.morphTarget.morphTargetInfluences[8] = (faceExpression[2] + faceExpression[3]) * 0.5;
+
+        // //くち 笑顔
+        // AVATAR.morphTarget.morphTargetInfluences[24] = faceExpression[0] * 0.5 + faceExpression[1] * 0.5;
+
+
+
+
 
     };
 
@@ -213,7 +202,6 @@ var AVATAR = AVATAR || {};
 
             //ボーンの設定
             boneDictionary = createBoneDictionary(vrm.parser.json);
-            console.log(boneDictionary);
             AVATAR.head = vrm.scene.getObjectByName(boneDictionary["head"], true);
             AVATAR.eyeR = vrm.scene.getObjectByName(boneDictionary["rightEye"], true);
             AVATAR.eyeL = vrm.scene.getObjectByName(boneDictionary["leftEye"], true);
@@ -228,9 +216,10 @@ var AVATAR = AVATAR || {};
 
             //表情のモーフターゲットを名前検索で設定する
             //jsonからsceneのモーフの特定方法がわからなかったため
-            AVATAR.morphTarget = searchFaceMorph(vrm.scene);
+            //AVATAR.morphTarget = searchFaceMorph(vrm.scene);
             expressionDictionary = createExpressionDictionary(vrm.parser.json);
 
+            AVATAR.blendShapeDictionary = AVATAR.createShapeDictionary(vrm);
             //three.jsのシーンへ追加
             threeScene.add(vrm.scene);
 
@@ -301,43 +290,84 @@ var AVATAR = AVATAR || {};
             }
 
         });
+        console.log(expressions);
         return expressions;
     }
 
+    AVATAR.createShapeDictionary = function (vrm) {
+        //VRM規格の標準の表情
+        const json = vrm.parser.json
+        const getShapeDictionary = function (blendShapeGroups) {
+            let ShapeDictionary = {};
+            blendShapeGroups.forEach(
+                function (blendShapeObj) {
+                    if (blendShapeObj.presetName != "unknown") {
+                        const name = blendShapeObj.name;
+                        let targetsObj = getTargets(blendShapeObj.binds);
+                        ShapeDictionary[blendShapeObj.presetName] = {
+                            name: name,
+                            targets: targetsObj
+                        }
+                    }
+                    else {
 
-    //  表情モーフターゲットの特定
-    // 一時的な実装
-    let searchFaceMorph = function (scene) {
-        let faceObj = scene.getObjectByName("Face", true)
-            || scene.getObjectByName("face", true)
-            || scene.getObjectByName("FACE", true);
-
-        if (faceObj.morphTargetInfluences) {
-            return faceObj;
+                    }
+                }
+            );
+            return ShapeDictionary;
         }
-        else {
-            return faceObj.children.find(function (element) {
-                let check = element.morphTargetInfluences;
-                return check;
+
+        const getTargets = function (binds) {
+            let targets = [];
+            binds.forEach(function (bind, index) {
+                let target = {};
+                const meshName = json.meshes[bind.mesh].name
+                target["meshName"] = meshName;
+                target["weight"] = bind.weight;
+                target["index"] = bind.index;
+                target["morphTargetInfluences"] = getMorphTarget(meshName.replace(".baked", ""));
+
+                targets[index] = target;
+
             });
+            return targets;
         }
+
+        const getMorphTarget = function (name) {
+            const targetObj = vrm.scene.getObjectByName(name);
+            // targetObj != undefinde
+            if (targetObj) {
+                if (targetObj.morphTargetInfluences != undefined) {
+                    return targetObj.morphTargetInfluences;
+
+                }
+                else if (targetObj.children != undefined) {
+                    let morphTarget;
+                    targetObj.children.forEach(function (child) {
+                        if (child.morphTargetInfluences != undefined) {
+                            morphTarget = child.morphTargetInfluences;
+                        }
+                    });
+                    return morphTarget;
+                }
+            }
+        }
+
+        let blendShapeDictionary = getShapeDictionary(json.extensions.VRM.blendShapeMaster.blendShapeGroups);
+        return blendShapeDictionary;
+
     }
 
-    //jeelizの表情データをVRM用に変換する。
-    let convertExpression = function () {
-        let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-        if (Number.isNaN(faceExpression[0])) {
-            if (!AVATAR.errorFlag) {
-                console.log("トラッキングエラー:NaN");
-                AVATAR.errorFlag = true;
-                JEEFACETRANSFERAPI.initialized = false;
-                initJeeliz();
-            }
+    AVATAR.blendShapeDictionary;
+    AVATAR.expressionSetValue = function (key, value) {
+        AVATAR.blendShapeDictionary[key].targets.forEach(function (target) {
+            target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
+        });
+    }
 
-            //JEEFACEFILTERAPI.toggle_pause(true); 
-            //JEEFACEFILTERAPI.toggle_pause(false);
-            return;
-        }
+
+    //jeelizの表情データをVRM用に変換する。
+    const convertExpression = function (faceExpression) {
 
         //eyeRightClose -> "blink_r"
         AVATAR.rawExpressions[16] = faceExpression[9];
@@ -363,18 +393,28 @@ var AVATAR = AVATAR || {};
     }
 
     //入力データに閾値を適用する。
-    let applyThreshold = function () {
-
+    const applyThreshold = function () {
+        AVATAR.rawExpressions.forEach(
+            function (value, index) {
+                AVATAR.filteredExpressions[index] = value;
+            }
+        );
     }
 
     //表情状態をモデルに適用する。
-    let applyExpression = function () {
+    const applyExpression = function () {
+
+        AVATAR.expressionSetValue("blink_r", AVATAR.filteredExpressions[16]);
+        AVATAR.expressionSetValue("blink_l", AVATAR.filteredExpressions[15]);
+        AVATAR.expressionSetValue("a", AVATAR.filteredExpressions[1]);
+        AVATAR.expressionSetValue("o", AVATAR.filteredExpressions[5]);
+        AVATAR.expressionSetValue("u", AVATAR.filteredExpressions[3]);
 
     }
 
+
 }(this));
 /*
-
 JEELIZ
 0: smileRight → closed mouth smile right
 1: smileLeft → closed mouth smile left
