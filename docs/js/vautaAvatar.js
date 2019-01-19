@@ -39,7 +39,7 @@ var AVATAR = AVATAR || {};
                     return;
                 }
                 // [init scene with spec...]
-                console.log('INFO: JEEFACEFILTERAPI IS READY');
+                console.log('INFO: JEEFACETRANSFERAPI IS READY');
                 isReady = true;//グローバル
                 AVATAR.errorFlag = false;
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
