@@ -13,7 +13,6 @@ jQuery(function () {
         var per = $(this).val();
         $('#subTitleSize').html(per);
         $('#subText').css('font-size', 2 * per * 0.01 + "vw");
-
     });
 
     $('#fullScreenButton').click(function () {

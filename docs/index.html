@@ -43,13 +43,15 @@
 		</header>
 		<div class="mdl-layout__drawer">
 			<span class="mdl-layout-title">Vauta</span>
-			<nav class="mdl-navigation">
+			<!-- <nav class="mdl-navigation">
 				<a class="mdl-navigation__link" href="">Link</a>
 				<a class="mdl-navigation__link" href="">Link</a>
 				<a class="mdl-navigation__link" href="">Link</a>
 				<a class="mdl-navigation__link" href="">Link</a>
-			</nav>
+			</nav> -->
 			<ul class="demo-list-item mdl-list">
+				<!--
+					
 				<li class="mdl-layout">
 					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">字幕の言語</button>
 					<div class="closed" style="margin-left: 20px">
@@ -88,6 +90,118 @@
 						フルスクリーン
 					</button>
 				</li>
+				-->
+				<!-- 基本設定 -->
+				<li class="mdl-layout">
+					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion"><span class="settingName">基本設定</span></button>
+					<div class="closed" style="margin-left: 20px">
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleJP">
+							<input type="checkbox" id="isSubtitleJP" class="mdl-checkbox__input" checked>
+							<span class="mdl-checkbox__label">ミラーモード</span>
+						</label>
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleEN">
+							<input type="checkbox" id="isSubtitleEN" class="mdl-checkbox__input">
+							<span class="mdl-checkbox__label">アンチエイリアス</span>
+						</label>
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleCN">
+							<input type="checkbox" id="isSubtitleCN" class="mdl-checkbox__input">
+							<span class="mdl-checkbox__label">デバッグモード</span>
+						</label>
+					</div>
+				</li>
+				<!-- 背景設定 -->
+				<li class="mdl-layout">
+					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">背景設定</button>
+					<table class="closed">
+						<tr>
+
+							<td>
+								<input id="subTitleSlider" class="mdl-slider mdl-js-slider" type="range" min="50" max="200" value="100"
+								 tabindex="0">
+							</td>
+							<td>
+								R:<span id="subTitleSize"></span>
+							</td>
+						</tr>
+						<tr>
+
+							<td>
+								<input id="subTitleSlider" class="mdl-slider mdl-js-slider" type="range" min="50" max="200" value="100"
+								 tabindex="0">
+							</td>
+							<td>
+								G:<span id="subTitleSize"></span>
+							</td>
+						</tr>
+						<tr>
+
+							<td>
+								<input id="subTitleSlider" class="mdl-slider mdl-js-slider" type="range" min="50" max="200" value="100"
+								 tabindex="0">
+							</td>
+							<td>
+								B:<span id="subTitleSize"></span>
+							</td>
+						</tr>
+
+					</table>
+				</li>
+				<!-- ボーン設定 -->
+				<li class="mdl-layout">
+					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">ボーン設定</button>
+					<div class="closed" style="margin-left: 20px">
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleJP">
+							<input type="checkbox" id="isSubtitleJP" class="mdl-checkbox__input" checked>
+							<span class="mdl-checkbox__label">日本語</span>
+						</label>
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleEN">
+							<input type="checkbox" id="isSubtitleEN" class="mdl-checkbox__input" checked>
+							<span class="mdl-checkbox__label">英語</span>
+						</label>
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleCN">
+							<input type="checkbox" id="isSubtitleCN" class="mdl-checkbox__input">
+							<span class="mdl-checkbox__label">中国語(简体)</span>
+						</label>
+					</div>
+				</li>
+				<!-- 検出設定 -->
+				<li class="mdl-layout">
+					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">検出設定</button>
+					<div class="closed" style="margin-left: 20px">
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleJP">
+							<input type="checkbox" id="isSubtitleJP" class="mdl-checkbox__input" checked>
+							<span class="mdl-checkbox__label">日本語</span>
+						</label>
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleEN">
+							<input type="checkbox" id="isSubtitleEN" class="mdl-checkbox__input" checked>
+							<span class="mdl-checkbox__label">英語</span>
+						</label>
+						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleCN">
+							<input type="checkbox" id="isSubtitleCN" class="mdl-checkbox__input">
+							<span class="mdl-checkbox__label">中国語(简体)</span>
+						</label>
+					</div>
+				</li>
+				<!-- クレジット -->
+				<li class="mdl-layout">
+					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">クレジット</button>
+					<table>
+						<tr>
+							<td>
+								<nav class="mdl-navigation">
+									<a class="mdl-navigation__link" href="https://twitter.com/ke4563">制作者Twitter<br>＠ke4563</a>
+									<a class="mdl-navigation__link" href="https://jeeliz.com/" target="_blank" rel="noopener">
+										<img src="assets/img/LOGO_JEELIZ_BLUE.png" style="height: 25px" alt="">
+									</a>
+								</nav>
+							</td>
+							<td>
+								<span id="subTitleSize"></span>
+							</td>
+						</tr>
+
+					</table>
+				</li>
 			</ul>
 		</div>
 		<main class="mdl-layout__content">
@@ -107,7 +221,6 @@
 	<canvas class='webojiCanvas' id='webojiCanvas' width='0' height='0'></canvas>
 
 	<div id="debugWindow">
-
 		<div>Debug Message Window</div>
 		<div>Face Data</div>
 		<div id="faceData"></div>

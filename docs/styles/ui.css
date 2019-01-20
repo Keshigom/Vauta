@@ -9,3 +9,7 @@ color: white;
 .closed{
     display: none;
 }
+
+.accordion{
+    text-align: left;
+}
