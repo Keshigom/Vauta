@@ -1,13 +1,50 @@
 .demo-layout-transparent .mdl-layout__header,.demo-layout-transparent .mdl-layout__drawer-button {
 /* This background is dark, so we set text to white. Use 87% black instead if
     your background is light. */
-color: white;
+ color: white;
 }
+.mdl-layout__drawer-button >i{
+    color:rgba(0, 0, 0, 0);
+    height: 30px;
+    width:  30px;
 
+    background: url("../assets/img/logoShadow.png");
+    background-size: cover;
+
+}
 .closed{
     display: none;
 }
 
 .accordion{
     text-align: left;
+}
+.mdl-button--file input {
+    cursor: pointer;
+    height: 100%;
+    right: 0;
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    width: 300px;
+    z-index: 4;
+  }
+  
+  .mdl-textfield--file .mdl-textfield__input {
+    box-sizing: border-box;
+    width: calc(100% - 32px);
+  }
+  .mdl-textfield--file .mdl-button--file {
+    right: 0;
+  }
+
+#uploadCard{
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;    
+    max-height: 100px;
+    max-width: 90%;
+    position: absolute;
+    margin: auto;
 }

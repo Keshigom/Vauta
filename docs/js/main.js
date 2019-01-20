@@ -19,6 +19,6 @@ jQuery(function () {
         const g = ($("#backgroundG").val() * 1).toString(16).padStart(2, "0");
         const b = ($("#backgroundB").val() * 1).toString(16).padStart(2, "0");
         $(id).html(per.toString().padStart(3, "0"));
-        $('body').css("background-color", '#' + r + g + b);
+        $('main').css("background-color", '#' + r + g + b);
     });
 });

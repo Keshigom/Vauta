@@ -5,7 +5,11 @@ if (WEBGL.isWebGLAvailable() === false) {
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
 
 }
+document.getElementById("uploadBtn").onchange = function () {
+    // document.getElementById("uploadFile").value = this.files[0].name;
+    handleFiles(this.files);
 
+};
 // 要素を取得
 var inputFile = document.getElementById("vrmInput");
 
