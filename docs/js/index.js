@@ -61,13 +61,14 @@ function main() {
 
 function initThree() {
 
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    // container = document.createElement('div');
+    // document.body.appendChild(container);
 
+    container = document.getElementById("threeCanvas");
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 20);
     camera.position.set(0, 1.5, - 1);
 
-    controls = new THREE.OrbitControls(camera);
+    controls = new THREE.OrbitControls(camera, container);
     controls.target.set(0, 1.5, 0);
     controls.update();
 
