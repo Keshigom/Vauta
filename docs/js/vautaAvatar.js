@@ -43,14 +43,8 @@ var AVATAR = AVATAR || {};
                 isReady = true;//グローバル
                 AVATAR.errorFlag = false;
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
-            }, //end callbackReady()
+            }//end callbackReady()
 
-            //called at each render iteration (drawing loop)
-
-            callbackTrack: function (detectState) {
-                console.log("callback");
-                console.log(detectState);
-            } //end callbackTrack()
         });//end init call
 
     }
@@ -154,7 +148,7 @@ var AVATAR = AVATAR || {};
 
 
     //animation
-    //[CHECK]
+    //TODO:
     // const animationFiles = ['assets/motion/Idle.gltf'];
     // const animationLoader = new THREE.GLTFLoader();
     // for (let i = 0; i < animationFiles.length; ++i) {
@@ -235,7 +229,7 @@ var AVATAR = AVATAR || {};
             AVATAR.VRM = vrm;
 
             //アニメーションの紐付け
-            //[CHECK]
+            //TODO:
             //一時無効化
             // let mixer = new THREE.AnimationMixer(vrm.scene);
             // animationLoader.load(animationFiles[loadAnimationIndex], function (gltf) {
@@ -399,9 +393,11 @@ var AVATAR = AVATAR || {};
     // 設定項目
     // settings[type][key] 
     let settings = {
+        "isMirror": true,       //鏡のように動作させる（右目を閉じるとアバターは左目を閉じる）
+        "isDebug": false,
+        "isAnitalias": false,
         "offThreshold": {},     //無変化の閾値
         "onThreshold": {},      //最大変化の閾値
-        "isMirror": true,       //鏡のように動作させる（右目を閉じるとアバターは左目を閉じる）
         "headOffset": {         //顔の向きが中心になるように調整する
             "x": 0,
             "y": 0,
@@ -416,6 +412,7 @@ var AVATAR = AVATAR || {};
         }
         settings[key1] = value;
     }
+
     AVATAR.getSetting = function (key1, key2) {
         if (key2) {
             return settings[key1][key2];
@@ -425,6 +422,13 @@ var AVATAR = AVATAR || {};
     AVATAR.getAllsettings = function () { return settings; }
 
     AVATAR.debugMessage = function () {
+        if (AVATAR.getSetting("isDebug")) {
+            document.getElementById("debugWindow").style.display = "inline";
+        }
+        else {
+            document.getElementById("debugWindow").style.display = "none";
+            return;
+        }
         let message;
         let target = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
         message =

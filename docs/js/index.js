@@ -1,3 +1,4 @@
+//TODO: 非同期に変更する　－＞main.js
 
 if (WEBGL.isWebGLAvailable() === false) {
 
@@ -61,9 +62,6 @@ function main() {
 
 function initThree() {
 
-    // container = document.createElement('div');
-    // document.body.appendChild(container);
-
     container = document.getElementById("threeCanvas");
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.25, 20);
     camera.position.set(0, 1.5, - 1);
@@ -79,12 +77,12 @@ function initThree() {
     scene.add(light);
 
     // レンダラー設定
-    //renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
     //renderer.setPixelRatio(window.devicePixelRatio);
-    renderer = new THREE.WebGLRenderer({});
     renderer.setPixelRatio(1);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.gammaOutput = true;
+    renderer.shadowMap.autoUpdate = false;
     container.appendChild(renderer.domElement);
 
     window.addEventListener('resize', onWindowResize, false);
@@ -94,8 +92,6 @@ function initThree() {
     stats.dom.style.position = "relative"
     stats.dom.style.top = "5px";
     stats.dom.style.margin = "auto";
-
-    // document.body.appendChild(stats.getDomElement());
     document.getElementById("debugWindow").appendChild(stats.dom);
 
 }
@@ -127,7 +123,6 @@ function animate() {
         debugFaceData.innerHTML = AVATAR.debugMessage();
     }
     renderer.render(scene, camera);
-    //console.log(JEEFACETRANSFERAPI.get_morphTargetInfluences()[6]);
     stats.update();
 
 }
