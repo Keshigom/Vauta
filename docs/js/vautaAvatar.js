@@ -42,7 +42,10 @@ var AVATAR = AVATAR || {};
                 console.log('INFO: JEEFACETRANSFERAPI IS READY');
                 isReady = true;//グローバル
                 AVATAR.errorFlag = false;
-                document.getElementById("loadSpiner").remove();
+
+                if (document.getElementById("loadSpiner") != undefined) {
+                    document.getElementById("loadSpiner").remove();
+                }
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
             }//end callbackReady()
 
