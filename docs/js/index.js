@@ -21,6 +21,7 @@ function handleFiles(filesObj) {
     //fileReader = filesObj;
     console.log("handlefile");
     console.log(filesObj[0]);
+    document.getElementById("loadSpiner").style.display = "inline";
     dropbox.style.display = "none";
     avatarURL = window.URL.createObjectURL(filesObj[0]);
     main();

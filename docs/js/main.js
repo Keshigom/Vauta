@@ -22,7 +22,6 @@ jQuery(function () {
         $('main').css("background-color", '#' + r + g + b);
     });
 
-
     //無変化の閾値
     $('.offThreshold').on('input change', function () {
         const inputPersent = $(this).val();
@@ -39,11 +38,12 @@ jQuery(function () {
         AVATAR.setSetting(inputPersent / 100, 'onThreshold', key);
     });
 
-    //
+    //頭の角度の調整
     $('.headOffset').on('on change', function () {
         const inputPersent = $(this).val();
         const key = $(this).attr('data-key');
         $('#headOffset' + '-' + key).html(inputPersent + "°");
+        //角度をラジアンへ
         AVATAR.setSetting(inputPersent / 180 * Math.PI, 'headOffset', key);
     });
 });
