@@ -24,12 +24,6 @@
 			<span class="mdl-layout-title">
 				<img src="assets/img/logo.png" style="height: 50px" alt="">
 			</span>
-			<!-- <nav class="mdl-navigation">
-				<a class="mdl-navigation__link" href="">Link</a>
-				<a class="mdl-navigation__link" href="">Link</a>
-				<a class="mdl-navigation__link" href="">Link</a>
-				<a class="mdl-navigation__link" href="">Link</a>
-			</nav> -->
 			<ul class="demo-list-item mdl-list">
 				<!-- 基本設定 -->
 				<li class="mdl-layout">
@@ -53,77 +47,191 @@
 				<!-- 背景設定 -->
 				<li class="mdl-layout">
 					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">背景設定</button>
-					<table class="closed">
-						<tr>
+					<div class="closed">
+						<table>
+							<tr>
 
-							<td>
-								<input id="backgroundR" class="mdl-slider mdl-js-slider inputBackGroundColor" type="range" min="0" max="255"
-								 value="100" tabindex="0">
-							</td>
-							<td>
-								R:<span id="backgroundRText">100</span>
-							</td>
-						</tr>
-						<tr>
+								<td>
+									<input id="backgroundR" class="mdl-slider mdl-js-slider inputBackGroundColor" type="range" min="0" max="255"
+									 value="100" tabindex="0">
+								</td>
+								<td>
+									R:<span id="backgroundRText">100</span>
+								</td>
+							</tr>
+							<tr>
 
-							<td>
-								<input id="backgroundG" class="mdl-slider mdl-js-slider inputBackGroundColor" type="range" min="0" max="255"
-								 value="100" tabindex="0">
-							</td>
-							<td>
-								G:<span id="backgroundGText">100</span>
-							</td>
-						</tr>
-						<tr>
+								<td>
+									<input id="backgroundG" class="mdl-slider mdl-js-slider inputBackGroundColor" type="range" min="0" max="255"
+									 value="100" tabindex="0">
+								</td>
+								<td>
+									G:<span id="backgroundGText">100</span>
+								</td>
+							</tr>
+							<tr>
 
-							<td>
-								<input id="backgroundB" class="mdl-slider mdl-js-slider inputBackGroundColor" type="range" min="0" max="255"
-								 value="100" tabindex="0">
-							</td>
-							<td>
-								B:<span id="backgroundBText">100</span>
-							</td>
-						</tr>
-
-					</table>
+								<td>
+									<input id="backgroundB" class="mdl-slider mdl-js-slider inputBackGroundColor" type="range" min="0" max="255"
+									 value="100" tabindex="0">
+								</td>
+								<td>
+									B:<span id="backgroundBText">100</span>
+								</td>
+							</tr>
+						</table>
+					</div>
 				</li>
 				<!-- ボーン設定 -->
 				<li class="mdl-layout">
 					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">ボーン設定</button>
-					<div class="closed" style="margin-left: 20px">
-						開発中です
-						<!-- <label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleJP">
-							<input type="checkbox" id="isSubtitleJP" class="mdl-checkbox__input" checked>
-							<span class="mdl-checkbox__label">日本語</span>
-						</label>
-						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleEN">
-							<input type="checkbox" id="isSubtitleEN" class="mdl-checkbox__input" checked>
-							<span class="mdl-checkbox__label">英語</span>
-						</label>
-						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleCN">
-							<input type="checkbox" id="isSubtitleCN" class="mdl-checkbox__input">
-							<span class="mdl-checkbox__label">中国語(简体)</span>
-						</label> -->
+					<div class="closed">
+						<table>
+							<tr>
+								<td class="thresholdItem">
+									頭の角度
+
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider headOffset" data-key="x" type="range" min="-45" max="45" value="0">
+								</td>
+								<td>
+									x:<span id="headOffset-x">0</span>
+								</td>
+							</tr>
+						</table>
 					</div>
+
 				</li>
 				<!-- 検出設定 -->
 				<li class="mdl-layout">
 					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">検出設定</button>
-					<div class="closed" style="margin-left: 20px">
-						開発中です
-						<!-- <label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleJP">
-							<input type="checkbox" id="isSubtitleJP" class="mdl-checkbox__input" checked>
-							<span class="mdl-checkbox__label">日本語</span>
-						</label>
-						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleEN">
-							<input type="checkbox" id="isSubtitleEN" class="mdl-checkbox__input" checked>
-							<span class="mdl-checkbox__label">英語</span>
-						</label>
-						<label class="mdl-checkbox mdl-js-checkbox" for="isSubtitleCN">
-							<input type="checkbox" id="isSubtitleCN" class="mdl-checkbox__input">
-							<span class="mdl-checkbox__label">中国語(简体)</span>
-						</label> -->
+					<div class="closed">
+						<!-- 右目 -->
+						<table>
+							<tr>
+								<td class="thresholdItem">
+									右目
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider offThreshold" data-key="blink_r" type="range" min="0" max="100" value="0">
+								</td>
+								<td>
+									OFF:<span id="offThreshold-blink_r">0.00</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider onThreshold" data-key="blink_r" type="range" min="0" max="100" value="100">
+								</td>
+								<td>
+									ON:<span id="onThreshold-blink_r">1.00</span>
+								</td>
+							</tr>
+						</table>
+						<!-- 左目 -->
+						<table>
+							<tr>
+								<td class="thresholdItem">
+									左目
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider offThreshold" data-key="blink_l" type="range" min="0" max="100" value="0">
+								</td>
+								<td>
+									OFF:<span id="offThreshold-blink_l">0.00</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider onThreshold" data-key="blink_l" type="range" min="0" max="100" value="100">
+								</td>
+								<td>
+									ON:<span id="onThreshold-blink_l">1.00</span>
+								</td>
+							</tr>
+						</table>
+						<!-- 口（あ） -->
+						<table>
+							<tr>
+								<td class="thresholdItem">
+									口（あ）
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider offThreshold" data-key="a" type="range" min="0" max="100" value="0">
+								</td>
+								<td>
+									OFF:<span id="offThreshold-a">0.00</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider onThreshold" data-key="a" type="range" min="0" max="100" value="100">
+								</td>
+								<td>
+									ON:<span id="onThreshold-a">1.00</span>
+								</td>
+							</tr>
+						</table>
+						<!-- 口（お）-->
+						<table>
+							<tr>
+								<td class="thresholdItem">
+									口（お）
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider offThreshold" data-key="o" type="range" min="0" max="100" value="0">
+								</td>
+								<td>
+									OFF:<span id="offThreshold-blink_o">0.00</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider onThreshold" data-key="o" type="range" min="0" max="100" value="100">
+								</td>
+								<td>
+									ON:<span id="onThreshold-o">1.00</span>
+								</td>
+							</tr>
+						</table>
+						<!-- 口（う）-->
+						<table>
+							<tr>
+								<td class="thresholdItem">
+									口（う）
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider offThreshold" data-key="u" type="range" min="0" max="100" value="0">
+								</td>
+								<td>
+									OFF:<span id="offThreshold-u">0.00</span>
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider onThreshold" data-key="u" type="range" min="0" max="100" value="100">
+								</td>
+								<td>
+									ON:<span id="onThreshold-u">1.00</span>
+								</td>
+							</tr>
+						</table>
+
 					</div>
+
 				</li>
 				<!-- クレジット -->
 				<li class="mdl-layout">

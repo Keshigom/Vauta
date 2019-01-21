@@ -21,4 +21,29 @@ jQuery(function () {
         $(id).html(per.toString().padStart(3, "0"));
         $('main').css("background-color", '#' + r + g + b);
     });
+
+
+    //無変化の閾値
+    $('.offThreshold').on('input change', function () {
+        const inputPersent = $(this).val();
+        const key = $(this).attr('data-key');
+        $('#offThreshold' + '-' + key).html((inputPersent / 100).toFixed(2));
+        AVATAR.setSetting(inputPersent / 100, 'offThreshold', key);
+    });
+
+    //最大変化の閾値
+    $('.onThreshold').on('input change', function () {
+        const inputPersent = $(this).val();
+        const key = $(this).attr('data-key');
+        $('#onThreshold' + '-' + key).html((inputPersent / 100).toFixed(2));
+        AVATAR.setSetting(inputPersent / 100, 'onThreshold', key);
+    });
+
+    //
+    $('.headOffset').on('on change', function () {
+        const inputPersent = $(this).val();
+        const key = $(this).attr('data-key');
+        $('#headOffset' + '-' + key).html(inputPersent + "°");
+        AVATAR.setSetting(inputPersent / 180 * Math.PI, 'headOffset', key);
+    });
 });
