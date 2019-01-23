@@ -82,11 +82,24 @@
 						</table>
 					</div>
 				</li>
-				<!-- ボーン設定 -->
+				<!-- アバター設定 -->
 				<li class="mdl-layout">
-					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">ボーン設定</button>
+					<button class="mdl-button mdl-js-button mdl-js-ripple-effect accordion">アバター設定 </button>
 					<div class="closed">
 						<table>
+							<tr>
+								<td class="thresholdItem">
+									大きさ
+								</td>
+							</tr>
+							<tr>
+								<td>
+									<input class="mdl-slider mdl-js-slider" id="avatarScale" type="range" min="-10" max="10" value="0">
+								</td>
+								<td>
+									:<span id="avatarScaleValue">1</span>
+								</td>
+							</tr>
 							<tr>
 								<td class="thresholdItem">
 									頭の角度
@@ -298,8 +311,9 @@
 			</a>
 		</div>
 		<div class="mdl-card__menu">
-			<button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
-				<i class="material-icons">help</i>
+			<button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect" id="licenseHelp">
+				<i class="material-icons">
+					help</i>
 			</button>
 		</div>
 	</div>
@@ -309,7 +323,7 @@
 		<div>Face Data</div>
 		<div id="faceData"></div>
 	</div>
-	<div class="loader" id="loadSpiner">Loading...</div>
+	<div class="mdl-spinner mdl-js-spinner" id="loadSpinner"></div>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="lib/three.min.js"></script>

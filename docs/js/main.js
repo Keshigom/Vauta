@@ -47,7 +47,27 @@ jQuery(function () {
         AVATAR.setSetting(inputPersent / 180 * Math.PI, 'headOffset', key);
     });
 
+
+    //頭の角度の調整
+    $('.headOffset').on('input change', function () {
+        const inputPersent = $(this).val();
+        const key = $(this).attr('data-key');
+        $('#headOffset' + '-' + key).html(inputPersent + "°");
+        //角度をラジアンへ
+        AVATAR.setSetting(inputPersent / 180 * Math.PI, 'headOffset', key);
+    });
+
     $('#acceptButton').on('on click', function () {
         $('#avatarData').remove();
+    });
+
+    $('#licenseHelp').on('on click', function () {
+        window.open('https://dwango.github.io/vrm/vrm_about/#vrm%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%81%AB%E8%A8%AD%E5%AE%9A%E3%81%A7%E3%81%8D%E3%82%8B%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9%E3%83%87%E3%83%BC%E3%82%BF', '_blank');
+
+    });
+    $('#avatarScale').on('input change', function () {
+        const scale = Math.pow(2, $(this).val() / 10);
+        AVATAR.setScale(scale);
+        $('#avatarScaleValue').html(scale.toFixed(2));
     });
 });

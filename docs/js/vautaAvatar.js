@@ -18,6 +18,8 @@ var AVATAR = AVATAR || {};
     AVATAR.metaData;
     AVATAR.rawExpressions = {};
     AVATAR.filteredExpressions = {};
+    AVATAR.isOK = true;
+    let avatarScale;
 
     AVATAR.init = function (avatarFileURL, threeScene) {
         initJeeliz();
@@ -43,8 +45,8 @@ var AVATAR = AVATAR || {};
                 isReady = true;//グローバル
                 AVATAR.errorFlag = false;
 
-                if (document.getElementById("loadSpiner") != undefined) {
-                    document.getElementById("loadSpiner").remove();
+                if (document.getElementById("loadSpinner") != undefined) {
+                    document.getElementById("loadSpinner").remove();
                 }
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
             }//end callbackReady()
@@ -231,8 +233,11 @@ var AVATAR = AVATAR || {};
 
             AVATAR.metaData = vrm.parser.json.extensions.VRM.meta;
             AVATAR.dispMetaData();
+            avatarScale = vrm.scene.scale;
             //デバッグ用
             AVATAR.VRM = vrm;
+
+
 
             //アニメーションの紐付け
             //TODO:
@@ -497,8 +502,8 @@ var AVATAR = AVATAR || {};
             case "allowedUserName":
                 if (AVATAR.metaData[key] == "OnlyAuthor") {
                     alert("このアバターを操作することはアバター作者にのみ許されます");
-                    //TODO
-                    document.getElementById("acceptButton").style.display = "none";
+                    AVATAR.isOK = false;
+                    // document.getElementById("acceptButton").style.display = "none";
                 }
                 addLicensItem(table, transferLicense(key), transferLicense(AVATAR.metaData[key]));
                 break;
@@ -547,11 +552,16 @@ var AVATAR = AVATAR || {};
             Other: "その他",
             otherLicenseUrl: "その他のライセンス条件"
         }
-
-
         return licenseDictionary[word] || word || "[未設定]";
     }
 
+
+
+    AVATAR.setScale = function (scale) {
+        if (avatarScale != undefined) {
+            avatarScale.set(scale, scale, scale);
+        }
+    }
 }(this));
 /*
 JEELIZ

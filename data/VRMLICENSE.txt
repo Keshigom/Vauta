@@ -1,6 +1,6 @@
 /*
 引用元
-https://dwango.github.io/vrm/vrm_spec/#gltf-2-0-texture
+https://dwango.github.io/vrm/vrm_spec/#vrm%E6%8B%A1%E5%BC%B5-%E3%83%A2%E3%83%87%E3%83%AB%E6%83%85%E5%A0%B1-json-extensions-vrm-meta
 */
 
 Title               :   "名前",
