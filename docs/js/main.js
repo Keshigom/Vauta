@@ -46,4 +46,8 @@ jQuery(function () {
         //角度をラジアンへ
         AVATAR.setSetting(inputPersent / 180 * Math.PI, 'headOffset', key);
     });
+
+    $('#acceptButton').on('on click', function () {
+        $('#avatarData').remove();
+    });
 });

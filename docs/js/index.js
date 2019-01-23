@@ -131,5 +131,4 @@ function animate() {
     stats.update();
 
 }
-
 //document.getElementById("debugWindow").style.display = "none";

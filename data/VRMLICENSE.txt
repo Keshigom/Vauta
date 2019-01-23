@@ -1,0 +1,23 @@
+/*
+引用元
+https://dwango.github.io/vrm/vrm_spec/#gltf-2-0-texture
+*/
+
+Title               :   "名前",
+Author              :   "作者",
+contactInformation  :   "連絡先",
+reference           :   "参照、親作品",
+version             :   "バージョン",
+allowedUserName	    :   "アバターに人格を与えることの許諾範囲",
+OnlyAuthor          :   "アバターを操作することはアバター作者にのみ許される",
+ExplictlyLicensedPerson : "明確に許可された人限定",
+Everyone            :   "全員に許可",
+Disallow            :   "不許可",
+Allow               :   "許可",
+violentUssageName   :   "このアバターを用いて暴力表現を演じることの許可",	
+sexualUssageName    :   "このアバターを用いて性的表現を演じることの許可",
+commercialUssageName:   "商用利用の許可",
+otherPermissionUrl  :   "その他のライセンス条件",
+licenseName         :   "ライセンスタイプ",
+Other               :   "その他",
+otherLicenseUrl     :   "その他のライセンス条件"

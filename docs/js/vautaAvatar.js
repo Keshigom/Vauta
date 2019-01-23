@@ -15,7 +15,7 @@ var AVATAR = AVATAR || {};
     AVATAR.upperChest;
     AVATAR.eyeR;
     AVATAR.eyeL;
-
+    AVATAR.metaData;
     AVATAR.rawExpressions = {};
     AVATAR.filteredExpressions = {};
 
@@ -161,7 +161,7 @@ var AVATAR = AVATAR || {};
     //let loadModelIndex = 0;
     //let loadAnimationIndex = 0;
 
-    let loadVRM = function (avatarFileURL, threeScene) {
+    const loadVRM = function (avatarFileURL, threeScene) {
         // model
         var loader = new THREE.VRMLoader();
         loader.load(avatarFileURL, function (vrm) {
@@ -229,6 +229,8 @@ var AVATAR = AVATAR || {};
             //three.jsのシーンへ追加
             threeScene.add(vrm.scene);
 
+            AVATAR.metaData = vrm.parser.json.extensions.VRM.meta;
+            AVATAR.dispMetaData();
             //デバッグ用
             AVATAR.VRM = vrm;
 
@@ -344,7 +346,8 @@ var AVATAR = AVATAR || {};
     //競合があった場合最後に実行されたもので上書きされる。
     AVATAR.expressionSetValue = function (key, value) {
         AVATAR.blendShapeDictionary[key].targets.forEach(function (target) {
-            target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
+            if ((target.index != undefined) && (target.morphTargetInfluences != undefined))
+                target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
         });
     }
 
@@ -466,6 +469,88 @@ var AVATAR = AVATAR || {};
         return message;
     };
 
+    AVATAR.dispMetaData = function () {
+        document.getElementById("avatarData").style.display = "inline";
+        for (const key in AVATAR.metaData) {
+            readMetaData(key)
+        }
+    }
+
+    const readMetaData = function (key) {
+        const table = document.getElementById("avatarMetaTable");
+
+        switch (key) {
+            case "title":
+                document.getElementById("avatarName").innerHTML = AVATAR.metaData[key] || "[名称未設定]";
+                break;
+            case "texture":
+                // function setThumbnail()
+                break;
+            case "otherPermissionUrl":
+                addLicensURL(table, key);
+
+                break;
+            case "otherLicenseUrl":
+                addLicensURL(table, key);
+
+                break;
+            case "allowedUserName":
+                if (AVATAR.metaData[key] == "OnlyAuthor") {
+                    alert("このアバターを操作することはアバター作者にのみ許されます");
+                    //TODO
+                    document.getElementById("acceptButton").style.display = "none";
+                }
+                addLicensItem(table, transferLicense(key), transferLicense(AVATAR.metaData[key]));
+                break;
+            default:
+                addLicensItem(table, transferLicense(key), transferLicense(AVATAR.metaData[key]));
+                break;
+        }
+
+    }
+    const addLicensURL = function (table, key) {
+        const row = table.insertRow(-1);
+        row.insertCell(-1).appendChild(document.createTextNode(transferLicense(key)));
+        const link = document.createElement("a");
+        if (AVATAR.metaData[key].match(/(http|https):\/\/.+/)) {
+            link.href = AVATAR.metaData[key];
+            link.target = "_blank"
+        }
+        link.innerHTML = " : リンク";
+        row.insertCell(-1).appendChild(link);
+    }
+
+    const addLicensItem = function (table, key, data) {
+        const row = table.insertRow(-1);
+        row.insertCell(-1).appendChild(document.createTextNode(key));
+        row.insertCell(-1).appendChild(document.createTextNode(" : " + data));
+    }
+
+    const transferLicense = function (word) {
+        const licenseDictionary = {
+            Title: "名前",
+            author: "作者",
+            contactInformation: "連絡先",
+            reference: "参照、親作品",
+            version: "バージョン",
+            allowedUserName: "アバターに人格を与えることの許諾範囲",
+            OnlyAuthor: "アバターを操作することはアバター作者にのみ許される",
+            ExplictlyLicensedPerson: "明確に許可された人限定",
+            Everyone: "全員に許可",
+            Disallow: "不許可",
+            Allow: "許可",
+            violentUssageName: "このアバターを用いて暴力表現を演じることの許可",
+            sexualUssageName: "このアバターを用いて性的表現を演じることの許可",
+            commercialUssageName: "商用利用の許可",
+            otherPermissionUrl: "その他のライセンス条件",
+            licenseName: "ライセンスタイプ",
+            Other: "その他",
+            otherLicenseUrl: "その他のライセンス条件"
+        }
+
+
+        return licenseDictionary[word] || word || "[未設定]";
+    }
 
 }(this));
 /*

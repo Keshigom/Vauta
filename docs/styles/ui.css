@@ -140,3 +140,20 @@
     }
   }
   
+  #avatarData{
+    max-height: 90%;
+    position: absolute;  
+    z-index: 3;
+    width: 600px;
+    max-width: 90%;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translateY(-50%) translateX(-50%);
+    transform: translateY(-50%) translateX(-50%);
+    display: none;
+    color: #000;
+
+  }
+  #avatarData > .mdl-card__supporting-text{
+    max-height: 60vh;
+  }
