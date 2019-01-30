@@ -1,5 +1,4 @@
 //  ポーズ制御
-
 class Skeleton {
 
     constructor(scene, json) {

@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 	<link rel="stylesheet" type="text/css" href="styles/main.css">
-	<script src="lib/jeeliz/jeelizFaceTransfer.js"></script>
+	<!-- <script src="lib/jeeliz/jeelizFaceTransfer.js"></script> -->
 
 	<!-- Material Design Lite -->
 	<script src="https://code.getmdl.io/1.3.0/material.min.js"></script>
@@ -292,11 +292,7 @@
 
 		</main>
 	</div>
-	<div id="threeCanvas" style="z-index: 2;position: absolute;"></div>
-
-	<canvas class='jeefacetransferCanvas' id='jeefacetransferCanvas'></canvas>
-	<canvas class='webojiCanvas' id='webojiCanvas' width='0' height='0'></canvas>
-
+	<canvas id="threeCanvas" style="z-index: 2;position: absolute;"></canvas>
 	<div class="mdl-card mdl-shadow--4dp mdl-list" id="avatarData">
 		<div class="mdl-card__title">
 			<h2 class="mdl-card__title-text" id="avatarName">Welcome !</h2>
@@ -324,6 +320,7 @@
 		<div id="faceData"></div>
 	</div>
 	<div class="mdl-spinner mdl-js-spinner" id="loadSpinner"></div>
+	<canvas class='jeefacetransferCanvas' id='jeefacetransferCanvas'></canvas>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="lib/three.min.js"></script>
@@ -332,9 +329,14 @@
 	<script src="lib/VRMLoader.js"></script>
 	<script src="lib/WebGL.js"></script>
 	<script src="lib/stats.min.js"></script>
+	<script src="lib/jeeliz/jeelizFaceTransfer.js"></script>
+
 	<!-- <script src="js/animationLoader.js"></script> -->
+	<script src="js/WebVRMHelper.js"></script>
 	<script src="js/vautaAvatar.js"></script>
-	<script src="js/index.js"></script>
+	<script src="js/vauta.js"></script>
+
+	<!-- <script src="js/index.js"></script> -->
 	<script src="js/main.js"></script>
 </body>
 

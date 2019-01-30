@@ -5,50 +5,22 @@ if (WEBGL.isWebGLAvailable() === false) {
     document.body.appendChild(WEBGL.getWebGLErrorMessage());
 
 }
-document.getElementById("uploadBtn").onchange = function () {
-    // document.getElementById("uploadFile").value = this.files[0].name;
-    handleFiles(this.files);
 
-};
 // 要素を取得
 var inputFile = document.getElementById("vrmInput");
 
 // 読み込みを実行
-var fileReader;
-var avatarURL;
-
-function handleFiles(filesObj) {
-    //fileReader = filesObj;
-    console.log("handlefile");
-    console.log(filesObj[0]);
-    document.getElementById("loadSpinner").classList.add("is-active");
-    dropbox.style.display = "none";
-    avatarURL = window.URL.createObjectURL(filesObj[0]);
-    main();
-}
-
-var dropbox;
-dropbox = document.getElementById("dropbox");
-dropbox.addEventListener("dragenter", dragenter, false);
-dropbox.addEventListener("dragover", dragover, false);
-dropbox.addEventListener("drop", drop, false);
-function dragenter(e) {
-    e.stopPropagation();
-    e.preventDefault();
-}
-
-function dragover(e) {
-    e.stopPropagation();
-    e.preventDefault();
-}
-function drop(e) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    var dt = e.dataTransfer;
-    var files = dt.files;
-    handleFiles(files);
-}
+// var fileReader;
+// var avatarURL;
+// function handleFiles(filesObj) {
+//     //fileReader = filesObj;
+//     console.log("handlefile");
+//     console.log(filesObj[0]);
+//     document.getElementById("loadSpinner").classList.add("is-active");
+//     dropbox.style.display = "none";
+//     avatarURL = window.URL.createObjectURL(filesObj[0]);
+//     main();
+// }
 
 
 var container, stats, controls;
