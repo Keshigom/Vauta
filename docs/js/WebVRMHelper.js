@@ -11,7 +11,7 @@ class WebVRM {
         avatarFileURL,
         targetScene,
         callBackReady = () => {
-            console.log("Avatar Ready")
+            console.log("Avatar is Ready")
         }
     ) {
         this._vrm;

@@ -2,13 +2,18 @@ const TargetCanvas = "threeCanvas";
 var VAUTA = VAUTA || {};
 (function (global) {
 
+
     //ファイルを読み込む
     //TODO:複数ファイルに対応する(テクスチャなど)
     VAUTA.handleFiles = (filesObj) => {
         document.getElementById("loadSpinner").classList.add("is-active");
         dropbox.style.display = "none";
+        console.time("load Avatar");
         const avatarURL = window.URL.createObjectURL(filesObj[0]);
-        VAUTA.init(document.getElementById(TargetCanvas), avatarURL);
+        VAUTA.loadModel(avatarURL);
+        console.timeEnd("load Avatar");
+
+        initJeeliz();
     }
 
 
@@ -16,13 +21,16 @@ var VAUTA = VAUTA || {};
     VAUTA.init = (targetCanvas, avatarURL) => {
         initThree(targetCanvas);
         initStats();
-        VAUTA.loadModel(avatarURL);
-        initJeeliz();
+        initThreshold();
+        //描画開始
+        VAUTA.update();
     }
 
+    let isAvatarReady = false;
     //モデル読み込み
     VAUTA.loadModel = (modelURL) => {
         VAUTA.avatar = new WebVRM(modelURL, scene);
+        VAUTA.isAvatarReady = true;
     }
 
     //Three.jsの初期化
@@ -43,7 +51,7 @@ var VAUTA = VAUTA || {};
         scene.add(light);
 
         initRenderer(canvas);
-
+        console.log("scene Ready")
     }
 
     // レンダラー設定
@@ -71,7 +79,9 @@ var VAUTA = VAUTA || {};
     }
 
     //Jeelizの初期化
+    let isJeelizReady = false;
     const initJeeliz = () => {
+        console.time("init jeeliz");
         JEEFACETRANSFERAPI.init({
             canvasId: 'jeefacetransferCanvas',
             NNCpath: '../lib/jeeliz/',          //  jeelizのニューラルネットワークJSONファイルがあるディレクトリ
@@ -85,11 +95,10 @@ var VAUTA = VAUTA || {};
                 }
                 // [init scene with spec...]
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
-                console.log('INFO: JEEFACETRANSFERAPI IS READY');
-                AVATAR.errorFlag = false;
+                console.timeEnd("init jeeliz");
+                console.log("Jeeliz is Ready");
+                isJeelizReady = true;
                 initPose();
-                //描画開始
-                VAUTA.update();
                 if (document.getElementById("loadSpinner") != undefined) {
                     document.getElementById("loadSpinner").remove();
                 }
@@ -153,6 +162,20 @@ var VAUTA = VAUTA || {};
     }
     VAUTA.getAllsettings = function () { return settings; }
 
+    const initThreshold = function () {
+        const standard = [
+            "neutral",
+            "a", "i", "u", "e", "o",
+            "blink", "joy", "angry", "sorrow", "fun", "lookUp", "lookdown", "lookleft", "lookright",
+            "blink_l", "blink_r"];
+
+        standard.forEach(function (target) {
+            //無変化の閾値
+            VAUTA.setSetting(0, "offThreshold", target);
+            //最大変化の閾値
+            VAUTA.setSetting(1, "onThreshold", target);
+        });
+    }
 
 
 
@@ -268,10 +291,61 @@ var VAUTA = VAUTA || {};
         }
     }
 
+    VAUTA.rawExpressions = {};
+    VAUTA.filteredExpressions = {};
+    //jeelizの表情データをVRM用に変換する。
+    const convertExpression = function (faceExpression) {
+
+        if (VAUTA.getSetting("isMirror")) {
+            //eyeRightClose
+            VAUTA.rawExpressions["blink_r"] = faceExpression[9];
+            //eyeLeftClose
+            VAUTA.rawExpressions["blink_l"] = faceExpression[8];
+        }
+        else {
+            //eyeRightClose
+            VAUTA.rawExpressions["blink_r"] = faceExpression[8];
+            //eyeLeftClose
+            VAUTA.rawExpressions["blink_l"] = faceExpression[9];
+        }
+        // mouthOpen -> "a"
+        VAUTA.rawExpressions["a"] = faceExpression[6];
+        // mouthOpen & mouthRound -> "o"
+        VAUTA.rawExpressions["o"] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+        // mouthRound -> "u"
+        VAUTA.rawExpressions["u"] = faceExpression[7] * 0.7;
+    }
+
+    //入力データに閾値を適用する。
+    const applyThreshold = function () {
+        for (let index in VAUTA.rawExpressions) {
+            const offThreshold = VAUTA.getSetting("offThreshold", index);
+            const onThreshold = VAUTA.getSetting("onThreshold", index);
+            let value = VAUTA.rawExpressions[index];
+            if (value < offThreshold || offThreshold >= 1) value = 0;
+            if (value > onThreshold || onThreshold <= 0) value = 1;
+            VAUTA.filteredExpressions[index] = value;
+        }
+    }
+
+    //表情状態をモデルに適用する。
+    const applyExpression = function () {
+        VAUTA.expressionSetValue("blink_r", VAUTA.filteredExpressions["blink_r"]);
+        VAUTA.expressionSetValue("blink_l", VAUTA.filteredExpressions["blink_l"]);
+        VAUTA.expressionSetValue("a", VAUTA.filteredExpressions["a"]);
+        VAUTA.expressionSetValue("o", VAUTA.filteredExpressions["o"]);
+        VAUTA.expressionSetValue("u", VAUTA.filteredExpressions["u"]);
+    }
+
     // 描画更新処理
     VAUTA.update = () => {
         requestAnimationFrame(VAUTA.update);
-        VAUTA.UpdateExpression();
+
+        if (isAvatarReady && isJeelizReady) {
+            VAUTA.UpdateExpression();
+
+        }
+
         renderer.render(scene, camera);
         stats.update();
     }
@@ -363,3 +437,4 @@ var VAUTA = VAUTA || {};
 
 
 }(this));
+VAUTA.init(document.getElementById(TargetCanvas));
