@@ -1,33 +1,6 @@
-const TargetCanvas = `threeCanvas`;
+const TargetCanvas = "threeCanvas";
 var VAUTA = VAUTA || {};
 (function (global) {
-    // 設定項目
-    // settings[type][key] 
-    let settings = {
-        "isMirror": true,       //鏡のように動作させる（右目を閉じるとアバターは左目を閉じる）
-        "isDebug": false,
-        "isAnitalias": false,
-        "offThreshold": {},     //無変化の閾値
-        "onThreshold": {},      //最大変化の閾値
-        "headOffset": {         //顔の向きが中心になるように調整する
-            "x": 0,
-            "y": 0,
-            "z": 0,              //y,z は非推奨
-        }
-    };
-
-    // 初期化
-    VAUTA.init = (targetCanvas, avatarURL) => {
-        initThree(targetCanvas);
-        initStats();
-        //TODO:消す
-        addTestObject();
-        //VAUTA.loadModel(`../asset/MonoPub.vrm`);
-        VAUTA.loadModel(avatarURL);
-        initfaceFilter();
-        //描画開始
-        VAUTA.update();
-    }
 
     //ファイルを読み込む
     //TODO:複数ファイルに対応する(テクスチャなど)
@@ -38,6 +11,21 @@ var VAUTA = VAUTA || {};
         VAUTA.init(document.getElementById(TargetCanvas), avatarURL);
     }
 
+
+    // 初期化
+    VAUTA.init = (targetCanvas, avatarURL) => {
+        initThree(targetCanvas);
+        initStats();
+        VAUTA.loadModel(avatarURL);
+        initJeeliz();
+    }
+
+    //モデル読み込み
+    VAUTA.loadModel = (modelURL) => {
+        VAUTA.avatar = new WebVRM(modelURL, scene);
+    }
+
+    //Three.jsの初期化
     let stats, controls;
     let camera, scene, renderer;
     const initThree = (canvas) => {
@@ -83,10 +71,10 @@ var VAUTA = VAUTA || {};
     }
 
     //Jeelizの初期化
-    const initfaceFilter = () => {
+    const initJeeliz = () => {
         JEEFACETRANSFERAPI.init({
             canvasId: 'jeefacetransferCanvas',
-            NNCpath: '../lib/jeeliz/', //path to JSON neural network model (NNC.json by default)
+            NNCpath: '../lib/jeeliz/',          //  jeelizのニューラルネットワークJSONファイルがあるディレクトリ
             // videoSettings: {
             //     videoElement: videoElement
             // },
@@ -96,18 +84,34 @@ var VAUTA = VAUTA || {};
                     return;
                 }
                 // [init scene with spec...]
+                JEEFACETRANSFERAPI.switch_displayVideo(false);
                 console.log('INFO: JEEFACETRANSFERAPI IS READY');
-                isReady = true;//グローバル
                 AVATAR.errorFlag = false;
-
+                initPose();
+                //描画開始
+                VAUTA.update();
                 if (document.getElementById("loadSpinner") != undefined) {
                     document.getElementById("loadSpinner").remove();
                 }
-                JEEFACETRANSFERAPI.switch_displayVideo(false);
             }//end callbackReady()
 
         });
     }
+
+    //Tポーズから腕を下ろさせる
+    const initPose = () => {
+        const armRotation = Math.PI * (-70 / 180);
+
+        VAUTA.avatar.setBoneRotation("leftUpperArm",
+            {
+                z: -armRotation
+            });
+        VAUTA.avatar.setBoneRotation("rightUpperArm",
+            {
+                z: armRotation
+            });
+    }
+
 
     // ウィンドウサイズ変更
     const onWindowResize = () => {
@@ -115,22 +119,23 @@ var VAUTA = VAUTA || {};
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
-    window.addEventListener(`resize`, onWindowResize, false);
+    window.addEventListener("resize", onWindowResize, false);
 
 
-    const addTestObject = () => {
-        const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-        const cubeMaterial = new THREE.MeshNormalMaterial();
-        const threeCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-        scene.add(threeCube);
-    }
-
-    //モデル読み込み
-    VAUTA.loadModel = (modelURL) => {
-        VAUTA.avatar = new WebVRM(modelURL, scene);
-    }
-
-
+    // 設定項目
+    // settings[type][key] 
+    let settings = {
+        "isMirror": true,       //鏡のように動作させる（右目を閉じるとアバターは左目を閉じる）
+        "isDebug": false,
+        "isAnitalias": false,
+        "offThreshold": {},     //無変化の閾値
+        "onThreshold": {},      //最大変化の閾値
+        "headOffset": {         //顔の向きが中心になるように調整する
+            "x": 0,
+            "y": 0,
+            "z": 0,              //y,z は非推奨
+        }
+    };
 
     //  設定処理
     VAUTA.setSetting = function (value, key1, key2) {
@@ -140,7 +145,6 @@ var VAUTA = VAUTA || {};
         }
         settings[key1] = value;
     }
-
     VAUTA.getSetting = function (key1, key2) {
         if (key2) {
             return settings[key1][key2];
@@ -148,6 +152,131 @@ var VAUTA = VAUTA || {};
         return settings[key1];
     }
     VAUTA.getAllsettings = function () { return settings; }
+
+
+
+
+
+
+    //  フェイスキャプチャ
+    VAUTA.UpdateExpression = function () {
+
+        //jeelizのgetメソッドがNaNしか返さなくなる場合がある。
+        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
+        let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
+        if (Number.isNaN(faceRotaion[0]) || Number.isNaN(faceExpression[0])) {
+            if (!AVATAR.errorFlag) {
+                console.log("トラッキングエラー");
+                AVATAR.errorFlag = true;
+                JEEFACETRANSFERAPI.initialized = false;
+                initJeeliz();
+            }
+            return;
+        }
+
+        //頭の向きの追従
+        applyHeadRotation(faceRotaion);
+
+        //表情
+        // convertExpression(faceExpression);
+        // applyThreshold();
+        // applyExpression();
+
+    };
+
+    const applyHeadRotation = function (rotaions) {
+
+        let xd = -1, yd = -1, zd = 1;
+        if (AVATAR.getSetting("isMirror")) {
+            yd = 1;
+            zd = -1;
+        }
+        //     AVATAR.getSetting("headOffset", "x") + faceRotaions[0],
+        //     AVATAR.getSetting("headOffset", "y") + faceRotaions[1],
+        //     AVATAR.getSetting("headOffset", "z") + faceRotaions[2]
+
+        let faceRotaion = [
+            xd * rotaions[0],
+            yd * rotaions[1],
+            zd * rotaions[2]
+        ];
+
+
+        const headW = 0.5;
+        const neckW = 0.3;
+        const spineW = 0.2;
+
+        VAUTA.avatar.setBoneRotation("head", {
+            x: faceRotaion[0] * headW,
+            y: faceRotaion[1] * headW,
+            z: faceRotaion[2] * headW
+        });
+        VAUTA.avatar.setBoneRotation("neck", {
+            x: faceRotaion[0] * neckW,
+            y: faceRotaion[1] * neckW,
+            z: faceRotaion[2] * neckW
+        });
+        VAUTA.avatar.setBoneRotation("spine", {
+            x: faceRotaion[0] * spineW,
+            y: faceRotaion[1] * spineW,
+            z: faceRotaion[2] * spineW
+        });
+
+        lookAt(faceRotaion, "front");
+
+    }
+
+    const lookAt = (faceRotaion, mode = "default", ) => {
+        switch (mode) {
+            //体の正面に瞳を合わせる
+            case "front":
+                VAUTA.avatar.setBoneRotation("leftEye", {
+                    x: -faceRotaion[0] / 2,
+                    y: -faceRotaion[1] / 2,
+                });
+                VAUTA.avatar.setBoneRotation("rightEye", {
+                    x: -faceRotaion[0] / 2,
+                    y: -faceRotaion[1] / 2,
+                });
+
+                break;
+
+            case "over":
+                VAUTA.avatar.setBoneRotation("leftEye", {
+                    x: faceRotaion[0] * 0.1,
+                    y: faceRotaion[1] * 0.3,
+                });
+                VAUTA.avatar.setBoneRotation("rightEye", {
+                    x: faceRotaion[0] * 0.1,
+                    y: faceRotaion[1] * 0.3,
+                });
+
+                break;
+            //顔の向きと同一
+            default://mode="default"
+                VAUTA.avatar.setBoneRotation("leftEye", {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                });
+                VAUTA.avatar.setBoneRotation("rightEye", {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                });
+                break;
+        }
+    }
+
+    // 描画更新処理
+    VAUTA.update = () => {
+        requestAnimationFrame(VAUTA.update);
+        VAUTA.UpdateExpression();
+        renderer.render(scene, camera);
+        stats.update();
+    }
+
+
 
 
     //  ライセンス表示
@@ -232,101 +361,5 @@ var VAUTA = VAUTA || {};
         return licenseDictionary[word] || word || "[未設定]";
     }
 
-
-    //  フェイスキャプチャ
-    VAUTA.UpdateExpression = function () {
-
-        //jeelizのgetメソッドがNaNしか返さなくなる場合がある。
-        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
-        let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
-        if (Number.isNaN(faceRotaion[0]) || Number.isNaN(faceExpression[0])) {
-            if (!AVATAR.errorFlag) {
-                console.log("トラッキングエラー");
-                AVATAR.errorFlag = true;
-                JEEFACETRANSFERAPI.initialized = false;
-                initJeeliz();
-            }
-            return;
-        }
-
-        //頭の向きの追従
-        applyHeadRotation(faceRotaion);
-
-        //表情
-        // convertExpression(faceExpression);
-        // applyThreshold();
-        // applyExpression();
-
-    };
-
-    const applyHeadRotation = function (faceRotaions) {
-        // let faceRotaion = [
-        //     AVATAR.getSetting("headOffset", "x") + faceRotaions[0],
-        //     AVATAR.getSetting("headOffset", "y") + faceRotaions[1],
-        //     AVATAR.getSetting("headOffset", "z") + faceRotaions[2]
-        // ];
-
-        let xd = -1, yd = -1, zd = 1;
-        // if (AVATAR.getSetting("isMirror")) {
-        //     yd = 1;
-        //     zd = -1;
-        // }
-
-
-        // if (AVATAR.head != undefined) {
-
-        //     let headW = 0.5;
-        //     let neckW = 0.3;
-        //     let chesW = 0.2;
-
-        //     if (AVATAR.upperChest) {
-        //         AVATAR.upperChest.rotation.x = xd * faceRotaion[0] * chesW;
-        //         AVATAR.upperChest.rotation.y = yd * faceRotaion[1] * chesW;
-        //         AVATAR.upperChest.rotation.z = zd * faceRotaion[2] * chesW;
-        //     }
-        //     else {
-        //         headW = 0.7;
-        //         neckW = 0.3;
-        //     }
-
-        //     if (AVATAR.neck) {
-        //         AVATAR.neck.rotation.x = xd * faceRotaion[0] * neckW;
-        //         AVATAR.neck.rotation.y = yd * faceRotaion[1] * neckW;
-        //         AVATAR.neck.rotation.z = zd * faceRotaion[2] * neckW;
-        //     }
-        //     else {
-        //         headW = 1.0;
-        //     }
-
-        VAUTA.avatar.setBoneRotation("head", {
-            x: faceRotaions[0],
-            y: faceRotaions[1],
-            z: faceRotaions[2]
-        });
-        //     AVATAR.head.rotation.x = xd * faceRotaion[0] * headW;
-        //     AVATAR.head.rotation.y = yd * faceRotaion[1] * headW;
-        //     AVATAR.head.rotation.z = zd * faceRotaion[2] * headW;
-
-        //     //正面に瞳を合わせる
-        //     AVATAR.eyeR.rotation.x = xd * -faceRotaion[0] / 2;
-        //     AVATAR.eyeR.rotation.y = yd * -faceRotaion[1] / 2;
-        //     //  AVATAR.eyeR.rotation.z = faceRotaion[2] / 2;
-        //     AVATAR.eyeL.rotation.x = xd * -faceRotaion[0] / 2;
-        //     AVATAR.eyeL.rotation.y = yd * -faceRotaion[1] / 2;
-        //     //AVATAR.eyeL.rotation.z = faceRotaion[2] / 2;
-
-        // }
-
-
-    }
-
-
-    // 描画更新処理
-    VAUTA.update = () => {
-        requestAnimationFrame(VAUTA.update);
-        VAUTA.UpdateExpression();
-        renderer.render(scene, camera);
-        stats.update();
-    }
 
 }(this));

@@ -148,14 +148,16 @@ class Skeleton {
     // key   必須
     // x,y,z 指定したもののみ反映
     setRotation(key, angle) {
-        if (angle.x != undefined)
-            this._boneMap.get(key).bone.rotation.x = angle.x;
+        if (this._boneMap.has(key)) {
+            if (angle.x != undefined)
+                this._boneMap.get(key).bone.rotation.x = angle.x;
 
-        if (angle.y != undefined)
-            this._boneMap.get(key).bone.rotation.y = angle.y;
+            if (angle.y != undefined)
+                this._boneMap.get(key).bone.rotation.y = angle.y;
 
-        if (angle.z != undefined)
-            this._boneMap.get(key).bone.rotation.z = angle.z;
+            if (angle.z != undefined)
+                this._boneMap.get(key).bone.rotation.z = angle.z;
+        }
     }
 
     getBoneName(key) {
@@ -246,10 +248,11 @@ class BlendShape {
     //FIXME:複数の表情を同時に設定するとモデルが破綻する
     //a-oのリップシンクとblink_l,r の瞬きは干渉しないものとしている。
     setExpression(key, value) {
-        this._blendShapeMap.get(key).targets.forEach((target) => {
-            if ((target.index != undefined) && (target.morphTargetInfluences != undefined))
-                target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
-        });
+        if (this._blendShapeMap.has(key))
+            this._blendShapeMap.get(key).targets.forEach((target) => {
+                if ((target.index != undefined) && (target.morphTargetInfluences != undefined))
+                    target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
+            });
     }
 
     //MapIteratorを返す
