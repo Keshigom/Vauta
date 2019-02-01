@@ -96,11 +96,8 @@ class WebVRM {
         return this._vrm.scene;
     }
 
-    setBoneRotation(key, angle) {
-        this._skeleton.setRotation(key, angle);
-    }
-    setExpression(key, value) {
-        this._blendShape.setExpression(key, value);
+    getMetadata() {
+        return this._vrm.parser.json.extensions.VRM.meta;
     }
 
     getBoneKeys() {
@@ -109,6 +106,18 @@ class WebVRM {
     getExpressionKeys() {
         return this._blendShape.getKeysIterator();
     }
+
+    setBoneRotation(key, angle) {
+        this._skeleton.setRotation(key, angle);
+    }
+    setExpression(key, value) {
+        this._blendShape.setExpression(key, value);
+    }
+
+    setScale(value) {
+        this._vrm.scene.scale.set(value, value, value);
+    }
+
 }
 
 //  ポーズ制御

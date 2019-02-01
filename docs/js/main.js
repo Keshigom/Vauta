@@ -31,7 +31,7 @@ jQuery(function () {
     $(`.toggleSetting`).on(`on change`, function () {
         const per = $(this).prop(`checked`);
         const id = $(this).attr(`id`);
-        AVATAR.setSetting(per, id);
+        VAUTA.setSetting(per, id);
     });
 
     //背景色変更
@@ -50,7 +50,7 @@ jQuery(function () {
         const inputPersent = $(this).val();
         const key = $(this).attr(`data-key`);
         $(`#offThreshold` + `-` + key).html((inputPersent / 100).toFixed(2));
-        AVATAR.setSetting(inputPersent / 100, `offThreshold`, key);
+        VAUTA.setSetting(inputPersent / 100, `offThreshold`, key);
     });
 
     //最大変化の閾値
@@ -58,7 +58,7 @@ jQuery(function () {
         const inputPersent = $(this).val();
         const key = $(this).attr(`data-key`);
         $(`#onThreshold` + `-` + key).html((inputPersent / 100).toFixed(2));
-        AVATAR.setSetting(inputPersent / 100, `onThreshold`, key);
+        VAUTA.setSetting(inputPersent / 100, `onThreshold`, key);
     });
 
     //頭の角度の調整
@@ -67,7 +67,7 @@ jQuery(function () {
         const key = $(this).attr(`data-key`);
         $(`#headOffset` + `-` + key).html(inputPersent + `°`);
         //角度をラジアンへ
-        AVATAR.setSetting(inputPersent / 180 * Math.PI, `headOffset`, key);
+        VAUTA.setSetting(inputPersent / 180 * Math.PI, `headOffset`, key);
     });
 
 
@@ -77,7 +77,7 @@ jQuery(function () {
         const key = $(this).attr(`data-key`);
         $(`#headOffset` + `-` + key).html(inputPersent + `°`);
         //角度をラジアンへ
-        AVATAR.setSetting(inputPersent / 180 * Math.PI, `headOffset`, key);
+        VAUTA.setSetting(inputPersent / 180 * Math.PI, `headOffset`, key);
     });
 
     $(`#acceptButton`).on(`on click`, function () {
@@ -90,7 +90,7 @@ jQuery(function () {
     });
     $(`#avatarScale`).on(`input change`, function () {
         const scale = Math.pow(2, $(this).val() / 10);
-        AVATAR.setScale(scale);
+        VAUTA.setScale(scale);
         $(`#avatarScaleValue`).html(scale.toFixed(2));
     });
 });

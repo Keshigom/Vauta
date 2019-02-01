@@ -41,6 +41,7 @@ body {
 }
 
 #debugWindow {
+    padding: 5px;
     z-index: 200;
     position: absolute;
     max-width: 250px;

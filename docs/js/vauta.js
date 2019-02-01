@@ -12,7 +12,6 @@ var VAUTA = VAUTA || {};
         const avatarURL = window.URL.createObjectURL(filesObj[0]);
         VAUTA.loadModel(avatarURL);
         console.timeEnd("load Avatar");
-
         initJeeliz();
     }
 
@@ -30,7 +29,8 @@ var VAUTA = VAUTA || {};
     //モデル読み込み
     VAUTA.loadModel = (modelURL) => {
         VAUTA.avatar = new WebVRM(modelURL, scene);
-        VAUTA.isAvatarReady = true;
+        isAvatarReady = true;
+
     }
 
     //Three.jsの初期化
@@ -88,7 +88,7 @@ var VAUTA = VAUTA || {};
             // videoSettings: {
             //     videoElement: videoElement
             // },
-            callbackReady: function (errCode, spec) {
+            callbackReady: function (errCode) {
                 if (errCode) {
                     console.log('AN ERROR HAPPENS. ERROR CODE =', errCode);
                     return;
@@ -97,8 +97,12 @@ var VAUTA = VAUTA || {};
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
                 console.timeEnd("init jeeliz");
                 console.log("Jeeliz is Ready");
+                if (!isJeelizReady) {
+                    initPose();
+                    VAUTA.dispMetaData();
+                };
+                VAUTA.errorFlag = false;
                 isJeelizReady = true;
-                initPose();
                 if (document.getElementById("loadSpinner") != undefined) {
                     document.getElementById("loadSpinner").remove();
                 }
@@ -177,51 +181,98 @@ var VAUTA = VAUTA || {};
         });
     }
 
+    VAUTA.setScale = function (value) {
+        VAUTA.avatar.setScale(value);
+    };
 
+    //デバック表示
+    //	HACK:実装をなおす
+    debugMessage = function () {
+        if (VAUTA.getSetting("isDebug")) {
+            document.getElementById("debugWindow").style.display = "inline";
+        }
+        else {
+            document.getElementById("debugWindow").style.display = "none";
+            return;
+        }
+        let message;
+        let target = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
+        message =
+            "Jeeliz Input <br>" +
+            "<div><span>0: smileRight </span><span style='right:0px;position: absolute;'> → " + target[0].toFixed(4) + "</span></div>" +
+            "<div><span>1: smileLeft </span><span style='right:0px;position: absolute;'> →  " + target[1].toFixed(4) + "</span></div>" +
+            "<div><span>2: eyeBrowLeftDown </span><span style='right:0px;position: absolute;'> → " + target[2].toFixed(4) + "</span></div>" +
+            "<div><span>3: eyeBrowRightDown </span><span style='right:0px;position: absolute;'> → " + target[3].toFixed(4) + "</span></div>" +
+            "<div><span>4: eyeBrowLeftUp </span><span style='right:0px;position: absolute;'> → " + target[4].toFixed(4) + "</span></div>" +
+            "<div><span>5: eyeBrowRightUp </span><span style='right:0px;position: absolute;'> → " + target[5].toFixed(4) + "</span></div>" +
+            "<div><span>6: mouthOpen </span><span style='right:0px;position: absolute;'> →  " + target[6].toFixed(4) + "</span></div>" +
+            "<div><span>7: mouthRound </span><span style='right:0px;position: absolute;'> → " + target[7].toFixed(4) + "</span></div>" +
+            "<div><span>8: eyeRightClose </span><span style='right:0px;position: absolute;'> →  " + target[8].toFixed(4) + "</span></div>" +
+            "<div><span>9: eyeLeftClose </span><span style='right:0px;position: absolute;'> → " + target[9].toFixed(4) + "</span></div>" +
+            "<div><span>10: mouthNasty </span><span style='right:0px;position: absolute;'> → " + target[10].toFixed(4) + "</span></div>" +
+            "<br>";
 
+        message +=
+            "Facial Expression<br>" +
+            "<div><span>name </span><span style='right:0px;position: absolute;'>     : input (OFF- ON)output</span></div>";
+        for (let index in VAUTA.rawExpressions) {
+            const offThreshold = VAUTA.getSetting("offThreshold", index);
+            const onThreshold = VAUTA.getSetting("onThreshold", index);
+            message +=
+                "<div><span>" + index + "</span><span style='right:0px;position: absolute;'>  :  " +
+                VAUTA.rawExpressions[index].toFixed(3) +
+                " ( " + offThreshold + " - " +
+                onThreshold + " ) " +
+                VAUTA.filteredExpressions[index].toFixed(3) + "</span><div>";
+        }
+        return message;
+    };
 
 
     //  フェイスキャプチャ
+    VAUTA.errorFlag = false;
     VAUTA.UpdateExpression = function () {
-
         //jeelizのgetメソッドがNaNしか返さなくなる場合がある。
-        let faceRotaion = JEEFACETRANSFERAPI.get_rotation();
+        let faceRotaion = JEEFACETRANSFERAPI.get_rotationStabilized();
         let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
         if (Number.isNaN(faceRotaion[0]) || Number.isNaN(faceExpression[0])) {
-            if (!AVATAR.errorFlag) {
+            if (!VAUTA.errorFlag) {
                 console.log("トラッキングエラー");
-                AVATAR.errorFlag = true;
+                VAUTA.errorFlag = true;
                 JEEFACETRANSFERAPI.initialized = false;
                 initJeeliz();
             }
             return;
         }
 
-        //頭の向きの追従
-        applyHeadRotation(faceRotaion);
+        if (JEEFACETRANSFERAPI.is_detected()) {
 
-        //表情
-        // convertExpression(faceExpression);
-        // applyThreshold();
-        // applyExpression();
+            //頭の向きの追従
+            applyHeadRotation(faceRotaion);
+
+            //表情
+            convertExpression(faceExpression);
+            applyThreshold();
+            applyExpression();
+        }
 
     };
 
     const applyHeadRotation = function (rotaions) {
 
         let xd = -1, yd = -1, zd = 1;
-        if (AVATAR.getSetting("isMirror")) {
+        if (VAUTA.getSetting("isMirror")) {
             yd = 1;
             zd = -1;
         }
-        //     AVATAR.getSetting("headOffset", "x") + faceRotaions[0],
-        //     AVATAR.getSetting("headOffset", "y") + faceRotaions[1],
-        //     AVATAR.getSetting("headOffset", "z") + faceRotaions[2]
+        //     VAUTA.getSetting("headOffset", "x") + faceRotaions[0],
+        //     VAUTA.getSetting("headOffset", "y") + faceRotaions[1],
+        //     VAUTA.getSetting("headOffset", "y") + faceRotaions[2]
 
         let faceRotaion = [
-            xd * rotaions[0],
-            yd * rotaions[1],
-            zd * rotaions[2]
+            VAUTA.getSetting("headOffset", "x") + xd * rotaions[0],
+            VAUTA.getSetting("headOffset", "y") + yd * rotaions[1],
+            VAUTA.getSetting("headOffset", "y") + zd * rotaions[2]
         ];
 
 
@@ -313,7 +364,7 @@ var VAUTA = VAUTA || {};
         // mouthOpen & mouthRound -> "o"
         VAUTA.rawExpressions["o"] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
         // mouthRound -> "u"
-        VAUTA.rawExpressions["u"] = faceExpression[7] * 0.7;
+        VAUTA.rawExpressions["u"] = faceExpression[7];
     }
 
     //入力データに閾値を適用する。
@@ -330,20 +381,24 @@ var VAUTA = VAUTA || {};
 
     //表情状態をモデルに適用する。
     const applyExpression = function () {
-        VAUTA.expressionSetValue("blink_r", VAUTA.filteredExpressions["blink_r"]);
-        VAUTA.expressionSetValue("blink_l", VAUTA.filteredExpressions["blink_l"]);
-        VAUTA.expressionSetValue("a", VAUTA.filteredExpressions["a"]);
-        VAUTA.expressionSetValue("o", VAUTA.filteredExpressions["o"]);
-        VAUTA.expressionSetValue("u", VAUTA.filteredExpressions["u"]);
+        VAUTA.avatar.setExpression("blink_r", VAUTA.filteredExpressions["blink_r"]);
+        VAUTA.avatar.setExpression("blink_l", VAUTA.filteredExpressions["blink_l"]);
+        VAUTA.avatar.setExpression("a", VAUTA.filteredExpressions["a"]);
+        VAUTA.avatar.setExpression("o", VAUTA.filteredExpressions["o"]);
+        VAUTA.avatar.setExpression("u", VAUTA.filteredExpressions["u"]);
     }
 
+    let clock = new THREE.Clock();
     // 描画更新処理
     VAUTA.update = () => {
         requestAnimationFrame(VAUTA.update);
 
         if (isAvatarReady && isJeelizReady) {
+            let delta = clock.getDelta();
+            JEEFACETRANSFERAPI.set_animateDelay(delta);
             VAUTA.UpdateExpression();
-
+            let debugFaceData = document.getElementById("faceData");
+            debugFaceData.innerHTML = debugMessage();
         }
 
         renderer.render(scene, camera);
@@ -354,9 +409,11 @@ var VAUTA = VAUTA || {};
 
 
     //  ライセンス表示
+    VAUTA.metaData;
     VAUTA.dispMetaData = function () {
+        VAUTA.metaData = VAUTA.avatar.getMetadata();
         document.getElementById("avatarData").style.display = "inline";
-        for (const key in AVATAR.metaData) {
+        for (const key in VAUTA.metaData) {
             readMetaData(key)
         }
     }
@@ -366,7 +423,7 @@ var VAUTA = VAUTA || {};
 
         switch (key) {
             case "title":
-                document.getElementById("avatarName").innerHTML = AVATAR.metaData[key] || "[名称未設定]";
+                document.getElementById("avatarName").innerHTML = VAUTA.metaData[key] || "[名称未設定]";
                 break;
             case "texture":
                 // function setThumbnail()
@@ -380,15 +437,15 @@ var VAUTA = VAUTA || {};
 
                 break;
             case "allowedUserName":
-                if (AVATAR.metaData[key] == "OnlyAuthor") {
+                if (VAUTA.metaData[key] == "OnlyAuthor") {
                     alert("このアバターを操作することはアバター作者にのみ許されます");
-                    AVATAR.isOK = false;
+                    isAvatarReady = false;
                     // document.getElementById("acceptButton").style.display = "none";
                 }
-                addLicensItem(table, transferLicense(key), transferLicense(AVATAR.metaData[key]));
+                addLicensItem(table, transferLicense(key), transferLicense(VAUTA.metaData[key]));
                 break;
             default:
-                addLicensItem(table, transferLicense(key), transferLicense(AVATAR.metaData[key]));
+                addLicensItem(table, transferLicense(key), transferLicense(VAUTA.metaData[key]));
                 break;
         }
 
@@ -397,8 +454,8 @@ var VAUTA = VAUTA || {};
         const row = table.insertRow(-1);
         row.insertCell(-1).appendChild(document.createTextNode(transferLicense(key)));
         const link = document.createElement("a");
-        if (AVATAR.metaData[key].match(/(http|https):\/\/.+/)) {
-            link.href = AVATAR.metaData[key];
+        if (VAUTA.metaData[key].match(/(http|https):\/\/.+/)) {
+            link.href = VAUTA.metaData[key];
             link.target = "_blank"
         }
         link.innerHTML = " : リンク";
