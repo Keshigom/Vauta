@@ -1,4 +1,10 @@
 const TargetCanvas = "threeCanvas";
+
+if (WEBGL.isWebGLAvailable() === false) {
+
+    document.body.appendChild(WEBGL.getWebGLErrorMessage());
+
+}
 var VAUTA = VAUTA || {};
 (function (global) {
 
@@ -361,10 +367,13 @@ var VAUTA = VAUTA || {};
         }
         // mouthOpen -> "a"
         VAUTA.rawExpressions["a"] = faceExpression[6];
-        // mouthOpen & mouthRound -> "o"
-        VAUTA.rawExpressions["o"] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+        VAUTA.rawExpressions["i"] = faceExpression[10];
+
         // mouthRound -> "u"
         VAUTA.rawExpressions["u"] = faceExpression[7];
+        // mouthOpen & mouthRound -> "o"
+        VAUTA.rawExpressions["o"] = (faceExpression[6] + faceExpression[6] * faceExpression[7]) * 0.5;
+
     }
 
     //入力データに閾値を適用する。
@@ -372,11 +381,22 @@ var VAUTA = VAUTA || {};
         for (let index in VAUTA.rawExpressions) {
             const offThreshold = VAUTA.getSetting("offThreshold", index);
             const onThreshold = VAUTA.getSetting("onThreshold", index);
-            let value = VAUTA.rawExpressions[index];
-            if (value < offThreshold || offThreshold >= 1) value = 0;
-            if (value > onThreshold || onThreshold <= 0) value = 1;
-            VAUTA.filteredExpressions[index] = value;
+            const value = VAUTA.rawExpressions[index];
+            VAUTA.filteredExpressions[index] = threshold(value, offThreshold, onThreshold);
         }
+    }
+    const threshold = (value, start, end) => {
+        if (value < start || start >= 1) {
+            return 0;
+        }
+        else if (value > end || end <= 0) {
+            return 1;
+        }
+        else if (end != start) {
+            return (value - start) / (end - start);
+        }
+
+        return value;
     }
 
     //表情状態をモデルに適用する。
@@ -384,8 +404,10 @@ var VAUTA = VAUTA || {};
         VAUTA.avatar.setExpression("blink_r", VAUTA.filteredExpressions["blink_r"]);
         VAUTA.avatar.setExpression("blink_l", VAUTA.filteredExpressions["blink_l"]);
         VAUTA.avatar.setExpression("a", VAUTA.filteredExpressions["a"]);
-        VAUTA.avatar.setExpression("o", VAUTA.filteredExpressions["o"]);
+        VAUTA.avatar.setExpression("i", VAUTA.filteredExpressions["i"]);
         VAUTA.avatar.setExpression("u", VAUTA.filteredExpressions["u"]);
+        VAUTA.avatar.setExpression("o", VAUTA.filteredExpressions["o"]);
+
     }
 
     let clock = new THREE.Clock();
