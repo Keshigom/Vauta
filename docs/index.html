@@ -4,7 +4,6 @@
 	<title>Vauta</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-	<link rel="stylesheet" type="text/css" href="styles/main.css">
 	<!-- <script src="lib/jeeliz/jeelizFaceTransfer.js"></script> -->
 
 	<!-- Material Design Lite -->
@@ -12,7 +11,7 @@
 	<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-red.min.css" />
 	<!-- Material Design icon font -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" type="text/css" href="styles/ui.css">
+	<link rel="stylesheet" type="text/css" href="styles/main.css">
 
 </head>
 
@@ -38,10 +37,10 @@
 							<input type="checkbox" id="isAntialias" class="mdl-checkbox__input toggleSetting">
 							<span class="mdl-checkbox__label">アンチエイリアス</span>
 						</label> -->
-						<label class="mdl-checkbox mdl-js-checkbox" for="isDebug">
+						<!-- <label class="mdl-checkbox mdl-js-checkbox" for="isDebug">
 							<input type="checkbox" id="isDebug" class="mdl-checkbox__input toggleSetting">
 							<span class="mdl-checkbox__label">デバッグモード</span>
-						</label>
+						</label> -->
 					</div>
 				</li>
 				<!-- 背景設定 -->
@@ -321,9 +320,11 @@
 		<div class="mdl-card__title">
 			<h2 class="mdl-card__title-text" id="avatarName">Welcome !</h2>
 		</div>
-		<div class="mdl-card__supporting-text">
-			<table id="avatarMetaTable">
-			</table>
+		<div class="mdl-card__supporting-text" id="avatarMetaData">
+			<div>
+
+				<table id="avatarMetaTable"></table>
+			</div>
 		</div>
 		<div class="mdl-card__actions mdl-card--border">
 			<a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" id="acceptButton">

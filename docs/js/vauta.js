@@ -21,8 +21,6 @@ var VAUTA = VAUTA || {};
         initJeeliz();
     }
 
-
-    // 初期化
     VAUTA.init = (targetCanvas, avatarURL) => {
         initThree(targetCanvas);
         initStats();
@@ -36,7 +34,6 @@ var VAUTA = VAUTA || {};
     VAUTA.loadModel = (modelURL) => {
         VAUTA.avatar = new WebVRM(modelURL, scene);
         isAvatarReady = true;
-
     }
 
     //Three.jsの初期化
@@ -60,19 +57,19 @@ var VAUTA = VAUTA || {};
         console.log("scene Ready")
     }
 
-    // レンダラー設定
     const initRenderer = (canvas) => {
         renderer = new THREE.WebGLRenderer({
-            antialias: false,
-            alpha: true,
+            antialias: false,                                   //負荷軽減目的（初期化後の変更は不可）
+            alpha: true,                                        //背景色は親要素に依存
             canvas: document.getElementById(TargetCanvas)
         });
+        //高解像度なディスプレイの場合高負荷
         //renderer.setPixelRatio(window.devicePixelRatio);
+        //ピクセル比を1:1に
         renderer.setPixelRatio(1);
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.gammaOutput = true;
         renderer.shadowMap.autoUpdate = false;
-        //canvas.appendChild(renderer.domElement);
     }
 
     //FPS表示
@@ -91,6 +88,7 @@ var VAUTA = VAUTA || {};
         JEEFACETRANSFERAPI.init({
             canvasId: 'jeefacetransferCanvas',
             NNCpath: '../lib/jeeliz/',          //  jeelizのニューラルネットワークJSONファイルがあるディレクトリ
+            //Webカメラ以外のvideoをソースとして使う場合
             // videoSettings: {
             //     videoElement: videoElement
             // },
@@ -99,7 +97,6 @@ var VAUTA = VAUTA || {};
                     console.log('AN ERROR HAPPENS. ERROR CODE =', errCode);
                     return;
                 }
-                // [init scene with spec...]
                 JEEFACETRANSFERAPI.switch_displayVideo(false);
                 console.timeEnd("init jeeliz");
                 console.log("Jeeliz is Ready");
@@ -192,15 +189,18 @@ var VAUTA = VAUTA || {};
     };
 
     //デバック表示
-    //	HACK:実装をなおす
-    debugMessage = function () {
+    VAUTA.toggleDebug = () => {
+        VAUTA.setSetting(!VAUTA.getSetting("isDebug"), "isDebug");
         if (VAUTA.getSetting("isDebug")) {
             document.getElementById("debugWindow").style.display = "inline";
         }
         else {
             document.getElementById("debugWindow").style.display = "none";
-            return;
         }
+    }
+    //	HACK:実装をなおす
+    debugMessage = function () {
+
         let message;
         let target = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
         message =
@@ -420,7 +420,9 @@ var VAUTA = VAUTA || {};
             JEEFACETRANSFERAPI.set_animateDelay(delta);
             VAUTA.UpdateExpression();
             let debugFaceData = document.getElementById("faceData");
-            debugFaceData.innerHTML = debugMessage();
+            if (VAUTA.getSetting("isDebug")) {
+                debugFaceData.innerHTML = debugMessage();
+            }
         }
 
         renderer.render(scene, camera);
@@ -452,6 +454,7 @@ var VAUTA = VAUTA || {};
                 break;
             case "otherPermissionUrl":
                 addLicensURL(table, key);
+                // addLicensItem(table, transferLicense(key), transferLicense(VAUTA.metaData[key]));
 
                 break;
             case "otherLicenseUrl":
@@ -480,7 +483,13 @@ var VAUTA = VAUTA || {};
             link.href = VAUTA.metaData[key];
             link.target = "_blank"
         }
-        link.innerHTML = " : リンク";
+        let str = VAUTA.metaData[key];
+        const index = str.indexOf("?");
+        if (index > 0) {
+            str = str.substring(0, index);
+        }
+
+        link.appendChild(document.createTextNode(str));
         row.insertCell(-1).appendChild(link);
     }
 
@@ -506,7 +515,7 @@ var VAUTA = VAUTA || {};
             violentUssageName: "このアバターを用いて暴力表現を演じることの許可",
             sexualUssageName: "このアバターを用いて性的表現を演じることの許可",
             commercialUssageName: "商用利用の許可",
-            otherPermissionUrl: "その他のライセンス条件",
+            otherPermissionUrl: "アバターの人格に関するその他のライセンス条件",
             licenseName: "ライセンスタイプ",
             Other: "その他",
             otherLicenseUrl: "その他のライセンス条件"
