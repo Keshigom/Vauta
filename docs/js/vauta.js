@@ -8,7 +8,6 @@ if (WEBGL.isWebGLAvailable() === false) {
 var VAUTA = VAUTA || {};
 (function (global) {
 
-
     //ファイルを読み込む
     //TODO:複数ファイルに対応する(テクスチャなど)
     VAUTA.handleFiles = (filesObj) => {
@@ -198,7 +197,7 @@ var VAUTA = VAUTA || {};
             document.getElementById("debugWindow").style.display = "none";
         }
     }
-    //	HACK:実装をなおす
+    //	OPTIMIZE:処理速度に影響が出る
     debugMessage = function () {
 
         let message;
@@ -238,7 +237,8 @@ var VAUTA = VAUTA || {};
     //  フェイスキャプチャ
     VAUTA.errorFlag = false;
     VAUTA.UpdateExpression = function () {
-        //jeelizのgetメソッドがNaNしか返さなくなる場合がある。
+        //	FIXME:	jeelizのgetメソッドがNaNしか返さなくなる場合がある。
+        //初期化して復帰する
         let faceRotaion = JEEFACETRANSFERAPI.get_rotationStabilized();
         let faceExpression = JEEFACETRANSFERAPI.get_morphTargetInfluencesStabilized();
         if (Number.isNaN(faceRotaion[0]) || Number.isNaN(faceExpression[0])) {
@@ -416,11 +416,13 @@ var VAUTA = VAUTA || {};
         requestAnimationFrame(VAUTA.update);
 
         if (isAvatarReady && isJeelizReady) {
+            //描画間隔にあわせて、検出間隔を変更する
             let delta = clock.getDelta();
             JEEFACETRANSFERAPI.set_animateDelay(delta);
+
             VAUTA.UpdateExpression();
-            let debugFaceData = document.getElementById("faceData");
             if (VAUTA.getSetting("isDebug")) {
+                let debugFaceData = document.getElementById("faceData");
                 debugFaceData.innerHTML = debugMessage();
             }
         }
@@ -449,19 +451,22 @@ var VAUTA = VAUTA || {};
             case "title":
                 document.getElementById("avatarName").innerHTML = VAUTA.metaData[key] || "[名称未設定]";
                 break;
+
             case "texture":
+                // TODO:アバターサムネイル画像の表示
                 // function setThumbnail()
                 break;
+
             case "otherPermissionUrl":
                 addLicensURL(table, key);
-                // addLicensItem(table, transferLicense(key), transferLicense(VAUTA.metaData[key]));
-
                 break;
+
             case "otherLicenseUrl":
                 addLicensURL(table, key);
-
                 break;
+
             case "allowedUserName":
+                //アバター利用が作者のみの場合、フェイストラックを切る
                 if (VAUTA.metaData[key] == "OnlyAuthor") {
                     alert("このアバターを操作することはアバター作者にのみ許されます");
                     isAvatarReady = false;
@@ -469,12 +474,16 @@ var VAUTA = VAUTA || {};
                 }
                 addLicensItem(table, transferLicense(key), transferLicense(VAUTA.metaData[key]));
                 break;
+
             default:
                 addLicensItem(table, transferLicense(key), transferLicense(VAUTA.metaData[key]));
                 break;
         }
 
     }
+
+    //http,https以外はただの文字列として表示する
+    //文字数を制限するためURLクエリの"?"以降は表示しない
     const addLicensURL = function (table, key) {
         const row = table.insertRow(-1);
         row.insertCell(-1).appendChild(document.createTextNode(transferLicense(key)));
