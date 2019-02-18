@@ -92,8 +92,9 @@ body {
       .mdl-textfield--file .mdl-button--file {
         right: 0;
       }
-    
-    
+      .setting-list-item{
+        display: inline-grid;
+      }
       #uploadCard{
         top: 0;
         bottom: 0;
