@@ -302,50 +302,52 @@ var VAUTA = VAUTA || {};
             z: faceRotaion[2] * spineW
         });
 
-        lookAt(faceRotaion, "front");
+        lookAt(faceRotaion, "");
 
     }
 
     const lookAt = (faceRotaion, mode = "default", ) => {
+        let rotaionX = 0;
+        let rotaionY = 0;
+        let rotaionZ = 0;
         switch (mode) {
+            //複合型
+            case "mix":
+                console.log(Math.abs(faceRotaion[1]));
+                rotaionX = (-faceRotaion[0] * 0.5) * Math.cos(2.5 * Math.abs(faceRotaion[0]));
+                rotaionY = (-faceRotaion[1] * 0.5) * Math.cos(2.5 * Math.abs(faceRotaion[1]));
+                break;
+
             //体の正面に瞳を合わせる
             case "front":
-                VAUTA.avatar.setBoneRotation("leftEye", {
-                    x: -faceRotaion[0] / 2,
-                    y: -faceRotaion[1] / 2,
-                });
-                VAUTA.avatar.setBoneRotation("rightEye", {
-                    x: -faceRotaion[0] / 2,
-                    y: -faceRotaion[1] / 2,
-                });
-
+                rotaionX = (-faceRotaion[0] / 2);
+                rotaionY = (-faceRotaion[1] / 2);
                 break;
 
             case "over":
-                VAUTA.avatar.setBoneRotation("leftEye", {
-                    x: faceRotaion[0] * 0.1,
-                    y: faceRotaion[1] * 0.3,
-                });
-                VAUTA.avatar.setBoneRotation("rightEye", {
-                    x: faceRotaion[0] * 0.1,
-                    y: faceRotaion[1] * 0.3,
-                });
-
+                rotaionX = faceRotaion[0] * 0.1;
+                rotaionY = faceRotaion[1] * 0.3;
                 break;
+
             //顔の向きと同一
             default://mode="default"
-                VAUTA.avatar.setBoneRotation("leftEye", {
-                    x: 0,
-                    y: 0,
-                    z: 0
-                });
-                VAUTA.avatar.setBoneRotation("rightEye", {
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                });
+                rotaionX = 0;
+                rotaionY = 0;
+                rotaionZ = 0;
                 break;
         }
+
+        VAUTA.avatar.setBoneRotation("leftEye", {
+            x: rotaionX,
+            y: rotaionY,
+            z: rotaionZ,
+        });
+        VAUTA.avatar.setBoneRotation("rightEye", {
+            x: rotaionX,
+            y: rotaionY,
+            z: rotaionZ,
+        });
+
     }
 
     VAUTA.rawExpressions = {};
