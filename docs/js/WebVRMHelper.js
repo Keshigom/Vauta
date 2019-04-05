@@ -99,8 +99,8 @@ class WebVRM {
     }
 
     _initAvatar(vrm) {
-        this._skeleton = new Skeleton(vrm, vrm.parser.json);
-        // this._blendShape = new BlendShape(vrm.scene, vrm.parser.json);
+        this._skeleton = new Skeleton(vrm);
+        this._blendShape = new BlendShape(vrm);
     }
 
 
@@ -116,7 +116,7 @@ class WebVRM {
     }
 
     getMetadata() {
-        // return this._vrm.parser.json.extensions.VRM.meta;
+        return this._vrm.meta;
     }
 
     getBoneKeys() {
@@ -130,11 +130,11 @@ class WebVRM {
         this._skeleton.setRotation(key, angle);
     }
     setExpression(key, value) {
-        // this._blendShape.setExpression(key, value);
+        this._blendShape.setExpression(key, value);
     }
 
     setScale(value) {
-        // this._vrm.scene.scale.set(value, value, value);
+        this._vrm.scene.scale.set(value, value, value);
     }
 
 }
@@ -142,15 +142,15 @@ class WebVRM {
 //  ポーズ制御
 class Skeleton {
 
-    constructor(scene, json) {
-        this._boneMap = this._createBoneMap(scene, json);
+    constructor(vrm) {
+        this._boneMap = this._createBoneMap(vrm);
     }
 
     //=======================================================
     //  private method
     //=======================================================
 
-    _createBoneMap(vrm, json) {
+    _createBoneMap(vrm) {
 
         let boneMap = new Map();
         //VRM規格の標準ボーン名がkeyになっている
@@ -204,69 +204,36 @@ class Skeleton {
 
 class BlendShape {
 
-    constructor(scene, json) {
-        this._blendShapeMap = this._createShapeMap(scene, json);
+    constructor(vrm, json) {
+        this._blendShapeMap = this._createShapeMap(vrm);
+        this._vrm = vrm;
     }
 
     //=======================================================
     //  private method
     //=======================================================
 
-    _createShapeMap(scene, json) {
-        const blendShapeGroups = json.extensions.VRM.blendShapeMaster.blendShapeGroups;
+    _createShapeMap(vrm) {
         let shapeMap = new Map();
-        blendShapeGroups.forEach(
-            (blendShapeObj) => {
+        vrm.blendShapeMaster.blendShapeGroups.forEach(
+            (blendShapeObj, index) => {
                 if (blendShapeObj.presetName != "unknown") {
-                    const name = blendShapeObj.name;
-                    let targetsObj = this._getTargets(blendShapeObj.binds, json.meshes, scene);
                     shapeMap.set(blendShapeObj.presetName, {
-                        name: name,
-                        targets: targetsObj
-                    });
+                        index: index,
+                        name: blendShapeObj.name
+                    })
                 }
                 else {
-
+                    shapeMap.set(blendShapeObj.name, {
+                        index: index,
+                        name: blendShapeObj.name
+                    })
                 }
-            }
-        );
+            });
+        console.log(shapeMap);
         return shapeMap;
     }
 
-    _getTargets(binds, meshes, scene) {
-        let targets = [];
-        binds.forEach((bind, index) => {
-            let target = {};
-            const meshName = meshes[bind.mesh].name
-            target["meshName"] = meshName;
-            target["weight"] = bind.weight;
-            target["index"] = bind.index;
-            target["morphTargetInfluences"] = this._getMorphTarget(meshName.replace(".baked", ""), scene);
-
-            targets[index] = target;
-
-        });
-        return targets;
-    }
-
-    _getMorphTarget(name, scene) {
-        const targetObj = scene.getObjectByName(name);
-        if (targetObj != undefined) {
-            if (targetObj.morphTargetInfluences != undefined) {
-                return targetObj.morphTargetInfluences;
-
-            }
-            else if (targetObj.children != undefined) {
-                let morphTarget;
-                targetObj.children.forEach(function (child) {
-                    if (child.morphTargetInfluences != undefined) {
-                        morphTarget = child.morphTargetInfluences;
-                    }
-                });
-                return morphTarget;
-            }
-        }
-    }
 
 
 
@@ -277,11 +244,9 @@ class BlendShape {
     //FIXME:複数の表情を同時に設定するとモデルが破綻する
     //a-oのリップシンクとblink_l,r の瞬きは干渉しないものとしている。
     setExpression(key, value) {
-        if (this._blendShapeMap.has(key))
-            this._blendShapeMap.get(key).targets.forEach((target) => {
-                if ((target.index != undefined) && (target.morphTargetInfluences != undefined))
-                    target.morphTargetInfluences[target.index] = value * target.weight * 0.01;
-            });
+        if (this._blendShapeMap.has(key)) {
+            this._vrm.setBlendShapeGroupWeight(this._blendShapeMap.get(key).index, value);
+        }
     }
 
     //MapIteratorを返す

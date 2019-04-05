@@ -50,7 +50,7 @@ var VAUTA = VAUTA || {};
         scene = new THREE.Scene();
         //   const light = new THREE.HemisphereLight(0xbbbbff, 0x444422);
         const light = new THREE.DirectionalLight(0xffffff);
-        light.position.set(0, 1, -2);
+        light.position.set(0, 1, -1);
         scene.add(light);
 
         initRenderer(canvas);
@@ -69,7 +69,7 @@ var VAUTA = VAUTA || {};
         renderer.setPixelRatio(1);
         renderer.setSize(window.innerWidth, window.innerHeight);
         // renderer.gammaOutput = true;
-        renderer.shadowMap.autoUpdate = false;
+        //renderer.shadowMap.autoUpdate = false;
     }
 
     //FPS表示
@@ -303,7 +303,7 @@ var VAUTA = VAUTA || {};
             z: faceRotaion[2] * spineW
         });
 
-        lookAt(faceRotaion, "");
+        lookAt(faceRotaion, "mix");
 
     }
 
@@ -314,7 +314,6 @@ var VAUTA = VAUTA || {};
         switch (mode) {
             //複合型
             case "mix":
-                console.log(Math.abs(faceRotaion[1]));
                 rotaionX = (-faceRotaion[0] * 0.5) * Math.cos(2.5 * Math.abs(faceRotaion[0]));
                 rotaionY = (-faceRotaion[1] * 0.5) * Math.cos(2.5 * Math.abs(faceRotaion[1]));
                 break;
