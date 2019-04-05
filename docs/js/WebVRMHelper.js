@@ -26,62 +26,81 @@ class WebVRM {
     //=======================================================
 
     _loadVRM(avatarFileURL, targetScene, callBackReady) {
-        // model
-        const loader = new THREE.VRMLoader();
-        let loadModel;
-        loader.load(avatarFileURL, (vrm) => {
-            vrm.scene.name = "VRM";
-            // VRMLoader doesn't support VRM Unlit extension yet so
-            // converting all materials to MeshBasicMaterial here as workaround so far.
-            //マテリアルの変換（Unlit -> MeshBasicMaterial ）
-            vrm.scene.traverse((object) => {
+        // const loader = new THREE.VRMLoader();
+        // let loadModel;
+        // loader.load(avatarFileURL, (vrm) => {
+        //     vrm.scene.name = "VRM";
+        //     // VRMLoader doesn't support VRM Unlit extension yet so
+        //     // converting all materials to MeshBasicMaterial here as workaround so far.
+        //     //マテリアルの変換（Unlit -> MeshBasicMaterial ）
+        //     vrm.scene.traverse((object) => {
 
-                if (object.material) {
+        //         if (object.material) {
 
-                    if (Array.isArray(object.material)) {
+        //             if (Array.isArray(object.material)) {
 
-                        for (var i = 0, il = object.material.length; i < il; i++) {
+        //                 for (var i = 0, il = object.material.length; i < il; i++) {
 
-                            var material = new THREE.MeshBasicMaterial();
-                            THREE.Material.prototype.copy.call(material, object.material[i]);
-                            material.color.copy(object.material[i].color);
-                            material.map = object.material[i].map;
-                            material.lights = false;
-                            material.skinning = object.material[i].skinning;
-                            material.morphTargets = object.material[i].morphTargets;
-                            material.morphNormals = object.material[i].morphNormals;
-                            object.material[i] = material;
+        //                     var material = new THREE.MeshBasicMaterial();
+        //                     THREE.Material.prototype.copy.call(material, object.material[i]);
+        //                     material.color.copy(object.material[i].color);
+        //                     material.map = object.material[i].map;
+        //                     material.lights = false;
+        //                     material.skinning = object.material[i].skinning;
+        //                     material.morphTargets = object.material[i].morphTargets;
+        //                     material.morphNormals = object.material[i].morphNormals;
+        //                     object.material[i] = material;
 
-                        }
+        //                 }
 
-                    } else {
+        //             } else {
 
-                        var material = new THREE.MeshBasicMaterial();
-                        THREE.Material.prototype.copy.call(material, object.material);
-                        material.color.copy(object.material.color);
-                        material.map = object.material.map;
-                        material.lights = false;
-                        material.skinning = object.material.skinning;
-                        material.morphTargets = object.material.morphTargets;
-                        material.morphNormals = object.material.morphNormals;
-                        object.material = material;
+        //                 var material = new THREE.MeshBasicMaterial();
+        //                 THREE.Material.prototype.copy.call(material, object.material);
+        //                 material.color.copy(object.material.color);
+        //                 material.map = object.material.map;
+        //                 material.lights = false;
+        //                 material.skinning = object.material.skinning;
+        //                 material.morphTargets = object.material.morphTargets;
+        //                 material.morphNormals = object.material.morphNormals;
+        //                 object.material = material;
 
-                    }
+        //             }
 
-                }
+        //         }
 
-            });
-            this._vrm = vrm;
-            targetScene.add(vrm.scene);
-            this._initAvatar(vrm);
-            this.isReady = true;
-            callBackReady();
-        });
+        //     });
+        //     this._vrm = vrm;
+        //     targetScene.add(vrm.scene);
+        //     this._initAvatar(vrm);
+        //     this.isReady = true;
+        //     callBackReady();
+        // });
+
+        const vrmLoader = new THREE.VRMLoader();
+
+        vrmLoader.load(
+            avatarFileURL,
+            (vrm) => {
+                targetScene.add(vrm.scene);
+                this._vrm = vrm;
+                this._initAvatar(vrm);
+                this.isReady = true;
+                callBackReady();
+                // Render the scene.
+            },
+            function (progress) {
+                console.log(progress.loaded / progress.total);
+            },
+            function (error) {
+                console.error(error);
+            }
+        );
     }
 
     _initAvatar(vrm) {
-        this._skeleton = new Skeleton(vrm.scene, vrm.parser.json);
-        this._blendShape = new BlendShape(vrm.scene, vrm.parser.json);
+        this._skeleton = new Skeleton(vrm, vrm.parser.json);
+        // this._blendShape = new BlendShape(vrm.scene, vrm.parser.json);
     }
 
 
@@ -97,25 +116,25 @@ class WebVRM {
     }
 
     getMetadata() {
-        return this._vrm.parser.json.extensions.VRM.meta;
+        // return this._vrm.parser.json.extensions.VRM.meta;
     }
 
     getBoneKeys() {
         return this._skeleton.getKeysIterator();
     }
     getExpressionKeys() {
-        return this._blendShape.getKeysIterator();
+        // return this._blendShape.getKeysIterator();
     }
 
     setBoneRotation(key, angle) {
         this._skeleton.setRotation(key, angle);
     }
     setExpression(key, value) {
-        this._blendShape.setExpression(key, value);
+        // this._blendShape.setExpression(key, value);
     }
 
     setScale(value) {
-        this._vrm.scene.scale.set(value, value, value);
+        // this._vrm.scene.scale.set(value, value, value);
     }
 
 }
@@ -131,20 +150,21 @@ class Skeleton {
     //  private method
     //=======================================================
 
-    _createBoneMap(scene, json) {
+    _createBoneMap(vrm, json) {
 
         let boneMap = new Map();
         //VRM規格の標準ボーン名がkeyになっている
-        const humanBones = json.extensions.VRM.humanoid.humanBones;
+        //const humanBones = json.extensions.VRM.humanoid.humanBones;
+        console.log(vrm);
+        const humanBones = vrm.humanoid.humanBones;
         for (const key in humanBones) {
             const target = humanBones[key];
             boneMap.set(target.bone,
                 {
-                    name: json.nodes[target.node].name,
-                    bone: scene.getObjectByName(json.nodes[target.node].name, true)
+                    bone: vrm.getNode(target.node)
                 });
         }
-
+        console.log(boneMap);
         return boneMap;
     }
 
