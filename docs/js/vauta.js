@@ -68,7 +68,7 @@ var VAUTA = VAUTA || {};
         //ピクセル比を1:1に
         renderer.setPixelRatio(1);
         renderer.setSize(window.innerWidth, window.innerHeight);
-        // renderer.gammaOutput = true;
+        renderer.gammaOutput = true;
         //renderer.shadowMap.autoUpdate = false;
     }
 
@@ -427,8 +427,10 @@ var VAUTA = VAUTA || {};
                 let debugFaceData = document.getElementById("faceData");
                 debugFaceData.innerHTML = debugMessage();
             }
-        }
 
+            VAUTA.avatar.update();
+
+        }
         renderer.render(scene, camera);
         stats.update();
     }

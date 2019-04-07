@@ -17,6 +17,9 @@ class WebVRM {
         this._vrm;
         this._skeleton;
         this._blendShape;
+        this.physics;
+        this.clock = new THREE.Clock();
+
         this.isReady = false;
         this._loadVRM(avatarFileURL, targetScene, callBackReady);
     }
@@ -77,14 +80,15 @@ class WebVRM {
         //     callBackReady();
         // });
 
-        const vrmLoader = new THREE.VRMLoader();
+        const vrmLoader = new __three_vrm__.VRMLoader();
 
         vrmLoader.load(
             avatarFileURL,
             (vrm) => {
-                targetScene.add(vrm.scene);
+                targetScene.add(vrm.model);
                 this._vrm = vrm;
                 this._initAvatar(vrm);
+                this.physics = new __three_vrm__.VRMPhysics(vrm);
                 this.isReady = true;
                 callBackReady();
                 // Render the scene.
@@ -137,6 +141,12 @@ class WebVRM {
         this._vrm.scene.scale.set(value, value, value);
     }
 
+
+    update() {
+        const delta = this.clock.getDelta();
+        this.physics.update(delta);
+        //renderer.render(scene, camera);
+    }
 }
 
 //  ポーズ制御
@@ -204,7 +214,7 @@ class Skeleton {
 
 class BlendShape {
 
-    constructor(vrm, json) {
+    constructor(vrm) {
         this._blendShapeMap = this._createShapeMap(vrm);
         this._vrm = vrm;
     }
