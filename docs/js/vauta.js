@@ -97,7 +97,7 @@ var VAUTA = VAUTA || {};
                     console.log('AN ERROR HAPPENS. ERROR CODE =', errCode);
                     return;
                 }
-                JEEFACETRANSFERAPI.switch_displayVideo(false);
+                // JEEFACETRANSFERAPI.switch_displayVideo(false);
                 console.timeEnd("init jeeliz");
                 console.log("Jeeliz is Ready");
                 if (!isJeelizReady) {
