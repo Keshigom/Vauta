@@ -427,6 +427,8 @@ var VAUTA = VAUTA || {};
                 let debugFaceData = document.getElementById("faceData");
                 debugFaceData.innerHTML = debugMessage();
             }
+            VAUTA.avatar.update();
+
         }
 
         renderer.render(scene, camera);
